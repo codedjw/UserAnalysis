@@ -1,0 +1,30 @@
+---------- Calculate Similarity Matrix Begin ----------
+---------- Calculate Frequency Similarity Begin ----------
+AFD vs. AFD: 3 union, 3 intersect.
+AFD vs. ABCD: 5 union, 2 intersect.
+ABCD vs. ABCD: 4 union, 4 intersect.
+2 x 2 matrix
+1   0.4
+0.4 1  
+********** Calculate Frequency Similarity End **********
+---------- Calculate Sequence Similarity Begin ----------
+AFD
+|||
+AFD
+Score: 3
+AF-D
+|  |
+ABCD
+Score: 0
+ABCD
+||||
+ABCD
+Score: 4
+2 x 2 matrix
+1 0
+0 1
+********** Calculate Sequence Similarity End **********
+2 x 2 matrix
+1   0.2
+0.2 1  
+********** Calculate Similarity Matrix End **********

@@ -1,0 +1,247 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    /*<a name="line.1"></a>
+<FONT color="green">002</FONT>     * OutMatrix.java<a name="line.2"></a>
+<FONT color="green">003</FONT>     *<a name="line.3"></a>
+<FONT color="green">004</FONT>     * Copyright 2003 Sergio Anibal de Carvalho Junior<a name="line.4"></a>
+<FONT color="green">005</FONT>     *<a name="line.5"></a>
+<FONT color="green">006</FONT>     * This file is part of NeoBio.<a name="line.6"></a>
+<FONT color="green">007</FONT>     *<a name="line.7"></a>
+<FONT color="green">008</FONT>     * NeoBio is free software; you can redistribute it and/or modify it under the terms of<a name="line.8"></a>
+<FONT color="green">009</FONT>     * the GNU General Public License as published by the Free Software Foundation; either<a name="line.9"></a>
+<FONT color="green">010</FONT>     * version 2 of the License, or (at your option) any later version.<a name="line.10"></a>
+<FONT color="green">011</FONT>     *<a name="line.11"></a>
+<FONT color="green">012</FONT>     * NeoBio is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;<a name="line.12"></a>
+<FONT color="green">013</FONT>     * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR<a name="line.13"></a>
+<FONT color="green">014</FONT>     * PURPOSE. See the GNU General Public License for more details.<a name="line.14"></a>
+<FONT color="green">015</FONT>     *<a name="line.15"></a>
+<FONT color="green">016</FONT>     * You should have received a copy of the GNU General Public License along with NeoBio;<a name="line.16"></a>
+<FONT color="green">017</FONT>     * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,<a name="line.17"></a>
+<FONT color="green">018</FONT>     * Boston, MA 02111-1307, USA.<a name="line.18"></a>
+<FONT color="green">019</FONT>     *<a name="line.19"></a>
+<FONT color="green">020</FONT>     * Proper attribution of the author as the source of the software would be appreciated.<a name="line.20"></a>
+<FONT color="green">021</FONT>     *<a name="line.21"></a>
+<FONT color="green">022</FONT>     * Sergio Anibal de Carvalho Junior             mailto:sergioanibaljr@users.sourceforge.net<a name="line.22"></a>
+<FONT color="green">023</FONT>     * Department of Computer Science               http://www.dcs.kcl.ac.uk<a name="line.23"></a>
+<FONT color="green">024</FONT>     * King's College London, UK                    http://www.kcl.ac.uk<a name="line.24"></a>
+<FONT color="green">025</FONT>     *<a name="line.25"></a>
+<FONT color="green">026</FONT>     * Please visit http://neobio.sourceforge.net<a name="line.26"></a>
+<FONT color="green">027</FONT>     *<a name="line.27"></a>
+<FONT color="green">028</FONT>     * This project was supervised by Professor Maxime Crochemore.<a name="line.28"></a>
+<FONT color="green">029</FONT>     *<a name="line.29"></a>
+<FONT color="green">030</FONT>     */<a name="line.30"></a>
+<FONT color="green">031</FONT>    <a name="line.31"></a>
+<FONT color="green">032</FONT>    package neobio.alignment;<a name="line.32"></a>
+<FONT color="green">033</FONT>    <a name="line.33"></a>
+<FONT color="green">034</FONT>    /**<a name="line.34"></a>
+<FONT color="green">035</FONT>     * Implements an interface to the OUT matrix of a block. This class is used by the<a name="line.35"></a>
+<FONT color="green">036</FONT>     * {@linkplain CrochemoreLandauZivUkelson} and subclasses to enconde the OUT matrix<a name="line.36"></a>
+<FONT color="green">037</FONT>     * from the input border and DIST matrix of an {@linkplain AlignmentBlock}.<a name="line.37"></a>
+<FONT color="green">038</FONT>     *<a name="line.38"></a>
+<FONT color="green">039</FONT>     * &lt;P>The OUT matrix defined as &lt;CODE>OUT[i,j] = I[i] + DIST[i,j]&lt;/CODE> where I is the<a name="line.39"></a>
+<FONT color="green">040</FONT>     * input border array and DIST is the DIST matrix.&lt;/P><a name="line.40"></a>
+<FONT color="green">041</FONT>     *<a name="line.41"></a>
+<FONT color="green">042</FONT>     * &lt;P>The output border of a block is computed from the OUT matrix by taking the maximum<a name="line.42"></a>
+<FONT color="green">043</FONT>     * value of each column. Note that this class &lt;B>does not compute the OUT matrix&lt;/B>, it<a name="line.43"></a>
+<FONT color="green">044</FONT>     * just stores the necessary information to retrieve a value at any position of the<a name="line.44"></a>
+<FONT color="green">045</FONT>     * matrix.&lt;/P><a name="line.45"></a>
+<FONT color="green">046</FONT>     *<a name="line.46"></a>
+<FONT color="green">047</FONT>     * &lt;P>It implements the Matrix interface so that the SMAWK algorithm can be used to<a name="line.47"></a>
+<FONT color="green">048</FONT>     * compute its column maxima.&lt;/P><a name="line.48"></a>
+<FONT color="green">049</FONT>     *<a name="line.49"></a>
+<FONT color="green">050</FONT>     * &lt;P>For more information on how this class is used, please refer to the specification<a name="line.50"></a>
+<FONT color="green">051</FONT>     * of the &lt;CODE>CrochemoreLandauZivUkelson&lt;/CODE> and its subclasses.<a name="line.51"></a>
+<FONT color="green">052</FONT>     *<a name="line.52"></a>
+<FONT color="green">053</FONT>     * @author Sergio A. de Carvalho Jr.<a name="line.53"></a>
+<FONT color="green">054</FONT>     * @see CrochemoreLandauZivUkelson<a name="line.54"></a>
+<FONT color="green">055</FONT>     * @see CrochemoreLandauZivUkelsonGlobalAlignment<a name="line.55"></a>
+<FONT color="green">056</FONT>     * @see CrochemoreLandauZivUkelsonLocalAlignment<a name="line.56"></a>
+<FONT color="green">057</FONT>     * @see AlignmentBlock<a name="line.57"></a>
+<FONT color="green">058</FONT>     * @see Smawk<a name="line.58"></a>
+<FONT color="green">059</FONT>     */<a name="line.59"></a>
+<FONT color="green">060</FONT>    public class OutMatrix implements Matrix<a name="line.60"></a>
+<FONT color="green">061</FONT>    {<a name="line.61"></a>
+<FONT color="green">062</FONT>            /**<a name="line.62"></a>
+<FONT color="green">063</FONT>             * The length of the longest sequence (number of characters) being aligned. It needs<a name="line.63"></a>
+<FONT color="green">064</FONT>             * to be set only once per alignment.<a name="line.64"></a>
+<FONT color="green">065</FONT>             */<a name="line.65"></a>
+<FONT color="green">066</FONT>            protected int max_length;<a name="line.66"></a>
+<FONT color="green">067</FONT>    <a name="line.67"></a>
+<FONT color="green">068</FONT>            /**<a name="line.68"></a>
+<FONT color="green">069</FONT>             * The maximum absolute score that the current scoring scheme can return. It needs<a name="line.69"></a>
+<FONT color="green">070</FONT>             * to be set only once per alignment.<a name="line.70"></a>
+<FONT color="green">071</FONT>             */<a name="line.71"></a>
+<FONT color="green">072</FONT>            protected int max_score;<a name="line.72"></a>
+<FONT color="green">073</FONT>    <a name="line.73"></a>
+<FONT color="green">074</FONT>            /**<a name="line.74"></a>
+<FONT color="green">075</FONT>             * The DIST matrix of a block.<a name="line.75"></a>
+<FONT color="green">076</FONT>             */<a name="line.76"></a>
+<FONT color="green">077</FONT>            protected int[][] dist;<a name="line.77"></a>
+<FONT color="green">078</FONT>    <a name="line.78"></a>
+<FONT color="green">079</FONT>            /**<a name="line.79"></a>
+<FONT color="green">080</FONT>             * The input border of a block.<a name="line.80"></a>
+<FONT color="green">081</FONT>             */<a name="line.81"></a>
+<FONT color="green">082</FONT>            protected int[] input_border;<a name="line.82"></a>
+<FONT color="green">083</FONT>    <a name="line.83"></a>
+<FONT color="green">084</FONT>            /**<a name="line.84"></a>
+<FONT color="green">085</FONT>             * The dimension of the OUT matrix.<a name="line.85"></a>
+<FONT color="green">086</FONT>             */<a name="line.86"></a>
+<FONT color="green">087</FONT>            protected int dim;<a name="line.87"></a>
+<FONT color="green">088</FONT>    <a name="line.88"></a>
+<FONT color="green">089</FONT>            /**<a name="line.89"></a>
+<FONT color="green">090</FONT>             * The number of columns of the block.<a name="line.90"></a>
+<FONT color="green">091</FONT>             */<a name="line.91"></a>
+<FONT color="green">092</FONT>            protected int lc;<a name="line.92"></a>
+<FONT color="green">093</FONT>    <a name="line.93"></a>
+<FONT color="green">094</FONT>            /**<a name="line.94"></a>
+<FONT color="green">095</FONT>             * Initialised this OUT matrix interface. This method needs to be executed only once<a name="line.95"></a>
+<FONT color="green">096</FONT>             * per alignment.<a name="line.96"></a>
+<FONT color="green">097</FONT>             *<a name="line.97"></a>
+<FONT color="green">098</FONT>             * @param max_length the length of the longest sequence (number of characters) being<a name="line.98"></a>
+<FONT color="green">099</FONT>             * aligned<a name="line.99"></a>
+<FONT color="green">100</FONT>             * @param max_score the maximum absolute score that the current scoring scheme can<a name="line.100"></a>
+<FONT color="green">101</FONT>             * return<a name="line.101"></a>
+<FONT color="green">102</FONT>             */<a name="line.102"></a>
+<FONT color="green">103</FONT>            public void init (int max_length, int max_score)<a name="line.103"></a>
+<FONT color="green">104</FONT>            {<a name="line.104"></a>
+<FONT color="green">105</FONT>                    this.max_length = max_length;<a name="line.105"></a>
+<FONT color="green">106</FONT>                    this.max_score = max_score;<a name="line.106"></a>
+<FONT color="green">107</FONT>            }<a name="line.107"></a>
+<FONT color="green">108</FONT>    <a name="line.108"></a>
+<FONT color="green">109</FONT>            /**<a name="line.109"></a>
+<FONT color="green">110</FONT>             * Sets this interface's data to represent an OUT matrix for a block. This method<a name="line.110"></a>
+<FONT color="green">111</FONT>             * is typically executed once for each block being aligned.<a name="line.111"></a>
+<FONT color="green">112</FONT>             *<a name="line.112"></a>
+<FONT color="green">113</FONT>             * @param dist the DIST matrix<a name="line.113"></a>
+<FONT color="green">114</FONT>             * @param input_border the input border<a name="line.114"></a>
+<FONT color="green">115</FONT>             * @param dim the dimension of the OUT matrix<a name="line.115"></a>
+<FONT color="green">116</FONT>             * @param lc the number of columns of the block<a name="line.116"></a>
+<FONT color="green">117</FONT>             */<a name="line.117"></a>
+<FONT color="green">118</FONT>            public void setData (int[][] dist, int[] input_border, int dim, int lc)<a name="line.118"></a>
+<FONT color="green">119</FONT>            {<a name="line.119"></a>
+<FONT color="green">120</FONT>                    this.dist = dist;<a name="line.120"></a>
+<FONT color="green">121</FONT>                    this.input_border = input_border;<a name="line.121"></a>
+<FONT color="green">122</FONT>                    this.dim = dim;<a name="line.122"></a>
+<FONT color="green">123</FONT>                    this.lc = lc;<a name="line.123"></a>
+<FONT color="green">124</FONT>            }<a name="line.124"></a>
+<FONT color="green">125</FONT>    <a name="line.125"></a>
+<FONT color="green">126</FONT>            /**<a name="line.126"></a>
+<FONT color="green">127</FONT>             * Returns the value at a given position of the matrix. In general it returns the<a name="line.127"></a>
+<FONT color="green">128</FONT>             * value of &lt;CODE>DIST[col][row] + input_border[row]&lt;/CODE>. However, special cases<a name="line.128"></a>
+<FONT color="green">129</FONT>             * occur for its upper right and lower left triangular parts.<a name="line.129"></a>
+<FONT color="green">130</FONT>             *<a name="line.130"></a>
+<FONT color="green">131</FONT>             * @param row row index<a name="line.131"></a>
+<FONT color="green">132</FONT>             * @param col column index<a name="line.132"></a>
+<FONT color="green">133</FONT>             * @return the value at row &lt;CODE>row&lt;/CODE>, column &lt;CODE>col&lt;/CODE> of this OUT<a name="line.133"></a>
+<FONT color="green">134</FONT>             * matrix<a name="line.134"></a>
+<FONT color="green">135</FONT>             */<a name="line.135"></a>
+<FONT color="green">136</FONT>            public int valueAt (int row, int col)<a name="line.136"></a>
+<FONT color="green">137</FONT>            {<a name="line.137"></a>
+<FONT color="green">138</FONT>                    // The DIST matrix is indexed by [column][row]<a name="line.138"></a>
+<FONT color="green">139</FONT>    <a name="line.139"></a>
+<FONT color="green">140</FONT>                    if (col &lt; lc)<a name="line.140"></a>
+<FONT color="green">141</FONT>                    {<a name="line.141"></a>
+<FONT color="green">142</FONT>                            if (row &lt; dim - (lc - col))<a name="line.142"></a>
+<FONT color="green">143</FONT>                                    return dist[col][row] + input_border[row];<a name="line.143"></a>
+<FONT color="green">144</FONT>                            else<a name="line.144"></a>
+<FONT color="green">145</FONT>                                    // lower left triangle entries<a name="line.145"></a>
+<FONT color="green">146</FONT>                                    return - (max_length + row + 1) * max_score;<a name="line.146"></a>
+<FONT color="green">147</FONT>                    }<a name="line.147"></a>
+<FONT color="green">148</FONT>                    else if (col == lc)<a name="line.148"></a>
+<FONT color="green">149</FONT>                    {<a name="line.149"></a>
+<FONT color="green">150</FONT>                            return dist[col][row] + input_border[row];<a name="line.150"></a>
+<FONT color="green">151</FONT>                    }<a name="line.151"></a>
+<FONT color="green">152</FONT>                    else<a name="line.152"></a>
+<FONT color="green">153</FONT>                    {<a name="line.153"></a>
+<FONT color="green">154</FONT>                            if (row &lt; (col - lc))<a name="line.154"></a>
+<FONT color="green">155</FONT>                                    // upper right triangle entries<a name="line.155"></a>
+<FONT color="green">156</FONT>                                    return Integer.MIN_VALUE + row;<a name="line.156"></a>
+<FONT color="green">157</FONT>                            else<a name="line.157"></a>
+<FONT color="green">158</FONT>                                    return dist[col][row - (col - lc)] + input_border[row];<a name="line.158"></a>
+<FONT color="green">159</FONT>                    }<a name="line.159"></a>
+<FONT color="green">160</FONT>            }<a name="line.160"></a>
+<FONT color="green">161</FONT>    <a name="line.161"></a>
+<FONT color="green">162</FONT>            /**<a name="line.162"></a>
+<FONT color="green">163</FONT>             * Returns the number of rows of this OUT matrix.<a name="line.163"></a>
+<FONT color="green">164</FONT>             *<a name="line.164"></a>
+<FONT color="green">165</FONT>             * @return the number of rows of this OUT matrix<a name="line.165"></a>
+<FONT color="green">166</FONT>             */<a name="line.166"></a>
+<FONT color="green">167</FONT>            public int numRows ()<a name="line.167"></a>
+<FONT color="green">168</FONT>            {<a name="line.168"></a>
+<FONT color="green">169</FONT>                    return dim;<a name="line.169"></a>
+<FONT color="green">170</FONT>            }<a name="line.170"></a>
+<FONT color="green">171</FONT>    <a name="line.171"></a>
+<FONT color="green">172</FONT>            /**<a name="line.172"></a>
+<FONT color="green">173</FONT>             * Returns the number of columns of this OUT matrix.<a name="line.173"></a>
+<FONT color="green">174</FONT>             *<a name="line.174"></a>
+<FONT color="green">175</FONT>             * @return the number of columns of this OUT matrix<a name="line.175"></a>
+<FONT color="green">176</FONT>             */<a name="line.176"></a>
+<FONT color="green">177</FONT>            public int numColumns ()<a name="line.177"></a>
+<FONT color="green">178</FONT>            {<a name="line.178"></a>
+<FONT color="green">179</FONT>                    return dim;<a name="line.179"></a>
+<FONT color="green">180</FONT>            }<a name="line.180"></a>
+<FONT color="green">181</FONT>    }<a name="line.181"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

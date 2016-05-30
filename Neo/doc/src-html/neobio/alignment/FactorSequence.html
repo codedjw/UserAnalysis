@@ -1,0 +1,363 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    /*<a name="line.1"></a>
+<FONT color="green">002</FONT>     * FactorSequence.java<a name="line.2"></a>
+<FONT color="green">003</FONT>     *<a name="line.3"></a>
+<FONT color="green">004</FONT>     * Copyright 2003 Sergio Anibal de Carvalho Junior<a name="line.4"></a>
+<FONT color="green">005</FONT>     *<a name="line.5"></a>
+<FONT color="green">006</FONT>     * This file is part of NeoBio.<a name="line.6"></a>
+<FONT color="green">007</FONT>     *<a name="line.7"></a>
+<FONT color="green">008</FONT>     * NeoBio is free software; you can redistribute it and/or modify it under the terms of<a name="line.8"></a>
+<FONT color="green">009</FONT>     * the GNU General Public License as published by the Free Software Foundation; either<a name="line.9"></a>
+<FONT color="green">010</FONT>     * version 2 of the License, or (at your option) any later version.<a name="line.10"></a>
+<FONT color="green">011</FONT>     *<a name="line.11"></a>
+<FONT color="green">012</FONT>     * NeoBio is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;<a name="line.12"></a>
+<FONT color="green">013</FONT>     * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR<a name="line.13"></a>
+<FONT color="green">014</FONT>     * PURPOSE. See the GNU General Public License for more details.<a name="line.14"></a>
+<FONT color="green">015</FONT>     *<a name="line.15"></a>
+<FONT color="green">016</FONT>     * You should have received a copy of the GNU General Public License along with NeoBio;<a name="line.16"></a>
+<FONT color="green">017</FONT>     * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,<a name="line.17"></a>
+<FONT color="green">018</FONT>     * Boston, MA 02111-1307, USA.<a name="line.18"></a>
+<FONT color="green">019</FONT>     *<a name="line.19"></a>
+<FONT color="green">020</FONT>     * Proper attribution of the author as the source of the software would be appreciated.<a name="line.20"></a>
+<FONT color="green">021</FONT>     *<a name="line.21"></a>
+<FONT color="green">022</FONT>     * Sergio Anibal de Carvalho Junior             mailto:sergioanibaljr@users.sourceforge.net<a name="line.22"></a>
+<FONT color="green">023</FONT>     * Department of Computer Science               http://www.dcs.kcl.ac.uk<a name="line.23"></a>
+<FONT color="green">024</FONT>     * King's College London, UK                    http://www.kcl.ac.uk<a name="line.24"></a>
+<FONT color="green">025</FONT>     *<a name="line.25"></a>
+<FONT color="green">026</FONT>     * Please visit http://neobio.sourceforge.net<a name="line.26"></a>
+<FONT color="green">027</FONT>     *<a name="line.27"></a>
+<FONT color="green">028</FONT>     * This project was supervised by Professor Maxime Crochemore.<a name="line.28"></a>
+<FONT color="green">029</FONT>     *<a name="line.29"></a>
+<FONT color="green">030</FONT>     */<a name="line.30"></a>
+<FONT color="green">031</FONT>    <a name="line.31"></a>
+<FONT color="green">032</FONT>    package neobio.alignment;<a name="line.32"></a>
+<FONT color="green">033</FONT>    <a name="line.33"></a>
+<FONT color="green">034</FONT>    import java.io.Reader;<a name="line.34"></a>
+<FONT color="green">035</FONT>    import java.io.BufferedReader;<a name="line.35"></a>
+<FONT color="green">036</FONT>    import java.io.IOException;<a name="line.36"></a>
+<FONT color="green">037</FONT>    <a name="line.37"></a>
+<FONT color="green">038</FONT>    /**<a name="line.38"></a>
+<FONT color="green">039</FONT>     * This class builds a list of factors of a character sequence as induced by its<a name="line.39"></a>
+<FONT color="green">040</FONT>     * Lempel-Ziv (LZ78) factorisation. Each factor is enconded as the longest factor<a name="line.40"></a>
+<FONT color="green">041</FONT>     * previously seen plus one character.<a name="line.41"></a>
+<FONT color="green">042</FONT>     *<a name="line.42"></a>
+<FONT color="green">043</FONT>     * &lt;P>The input can come from any source, provided it is encapsulated in a proper<a name="line.43"></a>
+<FONT color="green">044</FONT>     * &lt;CODE>Reader&lt;/CODE> instance. The stream is expected to be ready (i.e. the next<a name="line.44"></a>
+<FONT color="green">045</FONT>     * &lt;CODE>read&lt;/CODE> operation must return the first character of the sequence) and it is<a name="line.45"></a>
+<FONT color="green">046</FONT>     * not closed when its end is reached, so the client is allowed to reset it and maybe use<a name="line.46"></a>
+<FONT color="green">047</FONT>     * it for another purpose.&lt;/P><a name="line.47"></a>
+<FONT color="green">048</FONT>     *<a name="line.48"></a>
+<FONT color="green">049</FONT>     * &lt;P>Sequences can contain letters only although lines started with the<a name="line.49"></a>
+<FONT color="green">050</FONT>     * &lt;CODE>COMMENT_CHAR&lt;/CODE> character ('>') are regarded as comments and are completely<a name="line.50"></a>
+<FONT color="green">051</FONT>     * skipped. White spaces (including tabs, line feeds and carriage returns) are also<a name="line.51"></a>
+<FONT color="green">052</FONT>     * ignored throughout.&lt;/P><a name="line.52"></a>
+<FONT color="green">053</FONT>     *<a name="line.53"></a>
+<FONT color="green">054</FONT>     * &lt;P>This class uses a {@linkplain Trie} to keep track of a list of factors. Each node of<a name="line.54"></a>
+<FONT color="green">055</FONT>     * the trie contains a {@linkplain Factor} of the text. As the sequence is read from the<a name="line.55"></a>
+<FONT color="green">056</FONT>     * input, the trie is traversed as far as possible. When a leaf node is reached (which<a name="line.56"></a>
+<FONT color="green">057</FONT>     * means that the longest prefix of the input has been found), two tasks are<a name="line.57"></a>
+<FONT color="green">058</FONT>     * accomplished:&lt;/P><a name="line.58"></a>
+<FONT color="green">059</FONT>     *<a name="line.59"></a>
+<FONT color="green">060</FONT>     * &lt;UL><a name="line.60"></a>
+<FONT color="green">061</FONT>     * &lt;LI>a new &lt;CODE>Factor&lt;/CODE> is created with the character at the current position of<a name="line.61"></a>
+<FONT color="green">062</FONT>     * the input and the leaf node's factor;<a name="line.62"></a>
+<FONT color="green">063</FONT>     * &lt;LI>a new node is added to the trie with the character at the current position of the<a name="line.63"></a>
+<FONT color="green">064</FONT>     * input;<a name="line.64"></a>
+<FONT color="green">065</FONT>     * &lt;/UL><a name="line.65"></a>
+<FONT color="green">066</FONT>     *<a name="line.66"></a>
+<FONT color="green">067</FONT>     * &lt;P>Each factor also receives a serial number according to the order they are found and<a name="line.67"></a>
+<FONT color="green">068</FONT>     * a pointer to the next factor (in that order) for fast access. This pointer, together<a name="line.68"></a>
+<FONT color="green">069</FONT>     * with the factor's ancestor pointer forms a doubly-linked list of factors. The original<a name="line.69"></a>
+<FONT color="green">070</FONT>     * text can then be reconstructed simply by following the linked list and writing out its<a name="line.70"></a>
+<FONT color="green">071</FONT>     * factors.&lt;/P><a name="line.71"></a>
+<FONT color="green">072</FONT>     *<a name="line.72"></a>
+<FONT color="green">073</FONT>     * &lt;P>As an example, the sequence &lt;CODE>ACTAAACCGCATTAATAATAAAA&lt;/CODE> is parsed into the<a name="line.73"></a>
+<FONT color="green">074</FONT>     * following 12 factors:&lt;/P><a name="line.74"></a>
+<FONT color="green">075</FONT>     *<a name="line.75"></a>
+<FONT color="green">076</FONT>     * &lt;CODE>&lt;BLOCKQUOTE>&lt;PRE><a name="line.76"></a>
+<FONT color="green">077</FONT>     * 0  ( , ) = empty<a name="line.77"></a>
+<FONT color="green">078</FONT>     * 1  (0,A) = A<a name="line.78"></a>
+<FONT color="green">079</FONT>     * 2  (0,C) = C<a name="line.79"></a>
+<FONT color="green">080</FONT>     * 3  (0,T) = T<a name="line.80"></a>
+<FONT color="green">081</FONT>     * 4  (1,A) = AA<a name="line.81"></a>
+<FONT color="green">082</FONT>     * 5  (1,C) = AC<a name="line.82"></a>
+<FONT color="green">083</FONT>     * 6  (2,G) = CG<a name="line.83"></a>
+<FONT color="green">084</FONT>     * 7  (2,A) = CA<a name="line.84"></a>
+<FONT color="green">085</FONT>     * 8  (3,T) = TT<a name="line.85"></a>
+<FONT color="green">086</FONT>     * 9  (4,T) = AAT<a name="line.86"></a>
+<FONT color="green">087</FONT>     * 10 (9,A) = AATA<a name="line.87"></a>
+<FONT color="green">088</FONT>     * 11 (4,A) = AAA<a name="line.88"></a>
+<FONT color="green">089</FONT>     *<a name="line.89"></a>
+<FONT color="green">090</FONT>     * serial # (prefix, new char) = factor text<a name="line.90"></a>
+<FONT color="green">091</FONT>     * &lt;/PRE>&lt;/BLOCKQUOTE>&lt;/CODE><a name="line.91"></a>
+<FONT color="green">092</FONT>     *<a name="line.92"></a>
+<FONT color="green">093</FONT>     * &lt;P>This class is used by {@linkplain CrochemoreLandauZivUkelson} algorithm to speed up<a name="line.93"></a>
+<FONT color="green">094</FONT>     * the classic dynamic programming approach to sequence alignment.&lt;/P><a name="line.94"></a>
+<FONT color="green">095</FONT>     *<a name="line.95"></a>
+<FONT color="green">096</FONT>     * @author Sergio A. de Carvalho Jr.<a name="line.96"></a>
+<FONT color="green">097</FONT>     * @see Factor<a name="line.97"></a>
+<FONT color="green">098</FONT>     * @see Trie<a name="line.98"></a>
+<FONT color="green">099</FONT>     * @see CrochemoreLandauZivUkelson<a name="line.99"></a>
+<FONT color="green">100</FONT>     */<a name="line.100"></a>
+<FONT color="green">101</FONT>    public class FactorSequence<a name="line.101"></a>
+<FONT color="green">102</FONT>    {<a name="line.102"></a>
+<FONT color="green">103</FONT>            /**<a name="line.103"></a>
+<FONT color="green">104</FONT>             * The character used to start a comment line in a sequence file. When this character<a name="line.104"></a>
+<FONT color="green">105</FONT>             * is found, the rest of the line is ignored.<a name="line.105"></a>
+<FONT color="green">106</FONT>             */<a name="line.106"></a>
+<FONT color="green">107</FONT>            protected static final char COMMENT_CHAR = '>';<a name="line.107"></a>
+<FONT color="green">108</FONT>    <a name="line.108"></a>
+<FONT color="green">109</FONT>            /**<a name="line.109"></a>
+<FONT color="green">110</FONT>             * A pointer to the root factor, the one that starts the list of factors.<a name="line.110"></a>
+<FONT color="green">111</FONT>             */<a name="line.111"></a>
+<FONT color="green">112</FONT>            protected Factor root_factor;<a name="line.112"></a>
+<FONT color="green">113</FONT>    <a name="line.113"></a>
+<FONT color="green">114</FONT>            /**<a name="line.114"></a>
+<FONT color="green">115</FONT>             * The numbers of character represented by this sequence.<a name="line.115"></a>
+<FONT color="green">116</FONT>             */<a name="line.116"></a>
+<FONT color="green">117</FONT>            protected int num_chars;<a name="line.117"></a>
+<FONT color="green">118</FONT>    <a name="line.118"></a>
+<FONT color="green">119</FONT>            /**<a name="line.119"></a>
+<FONT color="green">120</FONT>             * The numbers of factors generated by the LZ78 parsing of the sequence.<a name="line.120"></a>
+<FONT color="green">121</FONT>             */<a name="line.121"></a>
+<FONT color="green">122</FONT>            protected int num_factors;<a name="line.122"></a>
+<FONT color="green">123</FONT>    <a name="line.123"></a>
+<FONT color="green">124</FONT>            /**<a name="line.124"></a>
+<FONT color="green">125</FONT>             * Creates a new instance of a &lt;CODE>FactorSequence&lt;/CODE>, loading the sequence data<a name="line.125"></a>
+<FONT color="green">126</FONT>             * from the &lt;CODE>Reader&lt;/CODE> input stream. A doubly-linked list of factors is built<a name="line.126"></a>
+<FONT color="green">127</FONT>             * according to its LZ78 factorisation.<a name="line.127"></a>
+<FONT color="green">128</FONT>             *<a name="line.128"></a>
+<FONT color="green">129</FONT>             * @param reader source of characters for this sequence<a name="line.129"></a>
+<FONT color="green">130</FONT>             * @throws IOException if an I/O exception occurs when reading the input<a name="line.130"></a>
+<FONT color="green">131</FONT>             * @throws InvalidSequenceException if the input does not contain a valid sequence<a name="line.131"></a>
+<FONT color="green">132</FONT>             */<a name="line.132"></a>
+<FONT color="green">133</FONT>            public FactorSequence (Reader reader)<a name="line.133"></a>
+<FONT color="green">134</FONT>                    throws IOException, InvalidSequenceException<a name="line.134"></a>
+<FONT color="green">135</FONT>            {<a name="line.135"></a>
+<FONT color="green">136</FONT>                    BufferedReader  input = new BufferedReader(reader);<a name="line.136"></a>
+<FONT color="green">137</FONT>                    Trie                    root_node, current_node, new_node = null;<a name="line.137"></a>
+<FONT color="green">138</FONT>                    Factor                  current_factor, last_factor, new_factor;<a name="line.138"></a>
+<FONT color="green">139</FONT>                    int                             ch;<a name="line.139"></a>
+<FONT color="green">140</FONT>                    char                    c;<a name="line.140"></a>
+<FONT color="green">141</FONT>    <a name="line.141"></a>
+<FONT color="green">142</FONT>                    // create root factor and the root node of the trie<a name="line.142"></a>
+<FONT color="green">143</FONT>                    root_factor = new Factor ();<a name="line.143"></a>
+<FONT color="green">144</FONT>                    root_node = new Trie (root_factor);<a name="line.144"></a>
+<FONT color="green">145</FONT>                    num_factors = 1;<a name="line.145"></a>
+<FONT color="green">146</FONT>                    num_chars = 0;<a name="line.146"></a>
+<FONT color="green">147</FONT>    <a name="line.147"></a>
+<FONT color="green">148</FONT>                    current_node = root_node;<a name="line.148"></a>
+<FONT color="green">149</FONT>                    last_factor = root_factor;<a name="line.149"></a>
+<FONT color="green">150</FONT>    <a name="line.150"></a>
+<FONT color="green">151</FONT>                    // read characters from the input<a name="line.151"></a>
+<FONT color="green">152</FONT>                    while ((ch = input.read()) != -1)<a name="line.152"></a>
+<FONT color="green">153</FONT>                    {<a name="line.153"></a>
+<FONT color="green">154</FONT>                            c = (char) ch;<a name="line.154"></a>
+<FONT color="green">155</FONT>    <a name="line.155"></a>
+<FONT color="green">156</FONT>                            if (c == COMMENT_CHAR)<a name="line.156"></a>
+<FONT color="green">157</FONT>                                    // it's a comment line: skip it!<a name="line.157"></a>
+<FONT color="green">158</FONT>                                    input.readLine();<a name="line.158"></a>
+<FONT color="green">159</FONT>    <a name="line.159"></a>
+<FONT color="green">160</FONT>                            // accept letters only<a name="line.160"></a>
+<FONT color="green">161</FONT>                            else if (Character.isLetter(c))<a name="line.161"></a>
+<FONT color="green">162</FONT>                            {<a name="line.162"></a>
+<FONT color="green">163</FONT>                                    num_chars++;<a name="line.163"></a>
+<FONT color="green">164</FONT>    <a name="line.164"></a>
+<FONT color="green">165</FONT>                                    // walk down the trie as far as possible<a name="line.165"></a>
+<FONT color="green">166</FONT>                                    new_node = current_node.spellDown(c);<a name="line.166"></a>
+<FONT color="green">167</FONT>    <a name="line.167"></a>
+<FONT color="green">168</FONT>                                    if (new_node != null)<a name="line.168"></a>
+<FONT color="green">169</FONT>                                    {<a name="line.169"></a>
+<FONT color="green">170</FONT>                                            current_node = new_node;<a name="line.170"></a>
+<FONT color="green">171</FONT>                                    }<a name="line.171"></a>
+<FONT color="green">172</FONT>                                    else<a name="line.172"></a>
+<FONT color="green">173</FONT>                                    {<a name="line.173"></a>
+<FONT color="green">174</FONT>                                            // the longest factor of the input has been found,<a name="line.174"></a>
+<FONT color="green">175</FONT>                                            // now create a new factor from the current node's factor<a name="line.175"></a>
+<FONT color="green">176</FONT>                                            current_factor = (Factor) current_node.getData();<a name="line.176"></a>
+<FONT color="green">177</FONT>                                            new_factor = new Factor (current_factor, num_factors, c);<a name="line.177"></a>
+<FONT color="green">178</FONT>    <a name="line.178"></a>
+<FONT color="green">179</FONT>                                            // add the new character to the trie as well<a name="line.179"></a>
+<FONT color="green">180</FONT>                                            current_node.add (new_factor, c);<a name="line.180"></a>
+<FONT color="green">181</FONT>    <a name="line.181"></a>
+<FONT color="green">182</FONT>                                            // set up a pointer from the last factor to the new one<a name="line.182"></a>
+<FONT color="green">183</FONT>                                            last_factor.setNext (new_factor);<a name="line.183"></a>
+<FONT color="green">184</FONT>                                            last_factor = new_factor;<a name="line.184"></a>
+<FONT color="green">185</FONT>    <a name="line.185"></a>
+<FONT color="green">186</FONT>                                            // restart at the root of the trie<a name="line.186"></a>
+<FONT color="green">187</FONT>                                            current_node = root_node;<a name="line.187"></a>
+<FONT color="green">188</FONT>    <a name="line.188"></a>
+<FONT color="green">189</FONT>                                            num_factors++;<a name="line.189"></a>
+<FONT color="green">190</FONT>                                    }<a name="line.190"></a>
+<FONT color="green">191</FONT>                            }<a name="line.191"></a>
+<FONT color="green">192</FONT>    <a name="line.192"></a>
+<FONT color="green">193</FONT>                            // anything else, except whitespaces, will throw an exception<a name="line.193"></a>
+<FONT color="green">194</FONT>                            else if (!Character.isWhitespace(c))<a name="line.194"></a>
+<FONT color="green">195</FONT>                                    throw new InvalidSequenceException<a name="line.195"></a>
+<FONT color="green">196</FONT>                                            ("Sequences can contain letters only.");<a name="line.196"></a>
+<FONT color="green">197</FONT>                    }<a name="line.197"></a>
+<FONT color="green">198</FONT>    <a name="line.198"></a>
+<FONT color="green">199</FONT>                    // if new_node is not null, the last factor is actually<a name="line.199"></a>
+<FONT color="green">200</FONT>                    // not a new factor but a factor already created<a name="line.200"></a>
+<FONT color="green">201</FONT>                    if (new_node != null)<a name="line.201"></a>
+<FONT color="green">202</FONT>                    {<a name="line.202"></a>
+<FONT color="green">203</FONT>                            // no new node is created, just point the last_factor to an<a name="line.203"></a>
+<FONT color="green">204</FONT>                            // existing one that represents the last characters of the text<a name="line.204"></a>
+<FONT color="green">205</FONT>                            last_factor.setNext((Factor) new_node.getData());<a name="line.205"></a>
+<FONT color="green">206</FONT>    <a name="line.206"></a>
+<FONT color="green">207</FONT>                            num_factors++;<a name="line.207"></a>
+<FONT color="green">208</FONT>                    }<a name="line.208"></a>
+<FONT color="green">209</FONT>    <a name="line.209"></a>
+<FONT color="green">210</FONT>                    // check if read anything useful!<a name="line.210"></a>
+<FONT color="green">211</FONT>                    if (num_factors &lt;= 1)<a name="line.211"></a>
+<FONT color="green">212</FONT>                            throw new InvalidSequenceException ("Empty sequence.");<a name="line.212"></a>
+<FONT color="green">213</FONT>            }<a name="line.213"></a>
+<FONT color="green">214</FONT>    <a name="line.214"></a>
+<FONT color="green">215</FONT>            /**<a name="line.215"></a>
+<FONT color="green">216</FONT>             * Returns the root factor, the one that starts the list of factors.<a name="line.216"></a>
+<FONT color="green">217</FONT>             *<a name="line.217"></a>
+<FONT color="green">218</FONT>             * @return root factor<a name="line.218"></a>
+<FONT color="green">219</FONT>             */<a name="line.219"></a>
+<FONT color="green">220</FONT>            public Factor getRootFactor ()<a name="line.220"></a>
+<FONT color="green">221</FONT>            {<a name="line.221"></a>
+<FONT color="green">222</FONT>                    return root_factor;<a name="line.222"></a>
+<FONT color="green">223</FONT>            }<a name="line.223"></a>
+<FONT color="green">224</FONT>    <a name="line.224"></a>
+<FONT color="green">225</FONT>            /**<a name="line.225"></a>
+<FONT color="green">226</FONT>             * Returns the number of factors produced by the LZ78 parsing of the text.<a name="line.226"></a>
+<FONT color="green">227</FONT>             *<a name="line.227"></a>
+<FONT color="green">228</FONT>             * @return number of factors<a name="line.228"></a>
+<FONT color="green">229</FONT>             */<a name="line.229"></a>
+<FONT color="green">230</FONT>            public int numFactors()<a name="line.230"></a>
+<FONT color="green">231</FONT>            {<a name="line.231"></a>
+<FONT color="green">232</FONT>                    return num_factors;<a name="line.232"></a>
+<FONT color="green">233</FONT>            }<a name="line.233"></a>
+<FONT color="green">234</FONT>    <a name="line.234"></a>
+<FONT color="green">235</FONT>            /**<a name="line.235"></a>
+<FONT color="green">236</FONT>             * Returns the number of characters of the original sequence.<a name="line.236"></a>
+<FONT color="green">237</FONT>             *<a name="line.237"></a>
+<FONT color="green">238</FONT>             * @return number of characters of the original sequence<a name="line.238"></a>
+<FONT color="green">239</FONT>             */<a name="line.239"></a>
+<FONT color="green">240</FONT>            public int numChars ()<a name="line.240"></a>
+<FONT color="green">241</FONT>            {<a name="line.241"></a>
+<FONT color="green">242</FONT>                    return num_chars;<a name="line.242"></a>
+<FONT color="green">243</FONT>            }<a name="line.243"></a>
+<FONT color="green">244</FONT>    <a name="line.244"></a>
+<FONT color="green">245</FONT>            /**<a name="line.245"></a>
+<FONT color="green">246</FONT>             * Reconstructs the sequence from the list of factors induced by the LZ78 parsing of<a name="line.246"></a>
+<FONT color="green">247</FONT>             * the text.<a name="line.247"></a>
+<FONT color="green">248</FONT>             *<a name="line.248"></a>
+<FONT color="green">249</FONT>             * @return the original sequence<a name="line.249"></a>
+<FONT color="green">250</FONT>             */<a name="line.250"></a>
+<FONT color="green">251</FONT>            public String toString ()<a name="line.251"></a>
+<FONT color="green">252</FONT>            {<a name="line.252"></a>
+<FONT color="green">253</FONT>                    StringBuffer    buf = new StringBuffer();<a name="line.253"></a>
+<FONT color="green">254</FONT>                    Factor                  node;<a name="line.254"></a>
+<FONT color="green">255</FONT>    <a name="line.255"></a>
+<FONT color="green">256</FONT>                    node = root_factor.getNext();<a name="line.256"></a>
+<FONT color="green">257</FONT>    <a name="line.257"></a>
+<FONT color="green">258</FONT>                    for (int i = 1; i &lt; numFactors(); i++)<a name="line.258"></a>
+<FONT color="green">259</FONT>                    {<a name="line.259"></a>
+<FONT color="green">260</FONT>                            buf.append(node);<a name="line.260"></a>
+<FONT color="green">261</FONT>    <a name="line.261"></a>
+<FONT color="green">262</FONT>                            node = node.getNext();<a name="line.262"></a>
+<FONT color="green">263</FONT>                    }<a name="line.263"></a>
+<FONT color="green">264</FONT>    <a name="line.264"></a>
+<FONT color="green">265</FONT>                    return buf.toString();<a name="line.265"></a>
+<FONT color="green">266</FONT>            }<a name="line.266"></a>
+<FONT color="green">267</FONT>    <a name="line.267"></a>
+<FONT color="green">268</FONT>            /**<a name="line.268"></a>
+<FONT color="green">269</FONT>             * Returns a string representation of the actual list of factors produced by the LZ78<a name="line.269"></a>
+<FONT color="green">270</FONT>             * parsing of the text. Each factor is printed out in a separate line, in the order<a name="line.270"></a>
+<FONT color="green">271</FONT>             * they appear in the text, with its serial number, its ancestor's serial number, its<a name="line.271"></a>
+<FONT color="green">272</FONT>             * new character, length and a string representation of the factor itself.<a name="line.272"></a>
+<FONT color="green">273</FONT>             *<a name="line.273"></a>
+<FONT color="green">274</FONT>             * @return a string representation of the list of factors<a name="line.274"></a>
+<FONT color="green">275</FONT>             */<a name="line.275"></a>
+<FONT color="green">276</FONT>            public String printFactors ()<a name="line.276"></a>
+<FONT color="green">277</FONT>            {<a name="line.277"></a>
+<FONT color="green">278</FONT>                    StringBuffer    buf = new StringBuffer();<a name="line.278"></a>
+<FONT color="green">279</FONT>                    Factor                  factor;<a name="line.279"></a>
+<FONT color="green">280</FONT>    <a name="line.280"></a>
+<FONT color="green">281</FONT>                    factor = root_factor.getNext();<a name="line.281"></a>
+<FONT color="green">282</FONT>    <a name="line.282"></a>
+<FONT color="green">283</FONT>                    for (int i = 1; i &lt; numFactors(); i++)<a name="line.283"></a>
+<FONT color="green">284</FONT>                    {<a name="line.284"></a>
+<FONT color="green">285</FONT>                            buf.append (factor.getSerialNumber() + "\t&lt;");<a name="line.285"></a>
+<FONT color="green">286</FONT>                            buf.append (factor.getAncestor().getSerialNumber() + " ,\t");<a name="line.286"></a>
+<FONT color="green">287</FONT>                            buf.append (factor.getNewChar() + ">\t");<a name="line.287"></a>
+<FONT color="green">288</FONT>                            buf.append (factor.length() + "\t" + factor + "\n");<a name="line.288"></a>
+<FONT color="green">289</FONT>    <a name="line.289"></a>
+<FONT color="green">290</FONT>                            factor = factor.getNext();<a name="line.290"></a>
+<FONT color="green">291</FONT>                    }<a name="line.291"></a>
+<FONT color="green">292</FONT>    <a name="line.292"></a>
+<FONT color="green">293</FONT>                    buf.append(numFactors() + " factors\n");<a name="line.293"></a>
+<FONT color="green">294</FONT>    <a name="line.294"></a>
+<FONT color="green">295</FONT>                    return buf.toString();<a name="line.295"></a>
+<FONT color="green">296</FONT>            }<a name="line.296"></a>
+<FONT color="green">297</FONT>    }<a name="line.297"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

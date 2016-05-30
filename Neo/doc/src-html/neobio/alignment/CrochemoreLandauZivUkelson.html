@@ -1,0 +1,828 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    /*<a name="line.1"></a>
+<FONT color="green">002</FONT>     * CrochemoreLandauZivUkelson.java<a name="line.2"></a>
+<FONT color="green">003</FONT>     *<a name="line.3"></a>
+<FONT color="green">004</FONT>     * Copyright 2003 Sergio Anibal de Carvalho Junior<a name="line.4"></a>
+<FONT color="green">005</FONT>     *<a name="line.5"></a>
+<FONT color="green">006</FONT>     * This file is part of NeoBio.<a name="line.6"></a>
+<FONT color="green">007</FONT>     *<a name="line.7"></a>
+<FONT color="green">008</FONT>     * NeoBio is free software; you can redistribute it and/or modify it under the terms of<a name="line.8"></a>
+<FONT color="green">009</FONT>     * the GNU General Public License as published by the Free Software Foundation; either<a name="line.9"></a>
+<FONT color="green">010</FONT>     * version 2 of the License, or (at your option) any later version.<a name="line.10"></a>
+<FONT color="green">011</FONT>     *<a name="line.11"></a>
+<FONT color="green">012</FONT>     * NeoBio is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;<a name="line.12"></a>
+<FONT color="green">013</FONT>     * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR<a name="line.13"></a>
+<FONT color="green">014</FONT>     * PURPOSE. See the GNU General Public License for more details.<a name="line.14"></a>
+<FONT color="green">015</FONT>     *<a name="line.15"></a>
+<FONT color="green">016</FONT>     * You should have received a copy of the GNU General Public License along with NeoBio;<a name="line.16"></a>
+<FONT color="green">017</FONT>     * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,<a name="line.17"></a>
+<FONT color="green">018</FONT>     * Boston, MA 02111-1307, USA.<a name="line.18"></a>
+<FONT color="green">019</FONT>     *<a name="line.19"></a>
+<FONT color="green">020</FONT>     * Proper attribution of the author as the source of the software would be appreciated.<a name="line.20"></a>
+<FONT color="green">021</FONT>     *<a name="line.21"></a>
+<FONT color="green">022</FONT>     * Sergio Anibal de Carvalho Junior             mailto:sergioanibaljr@users.sourceforge.net<a name="line.22"></a>
+<FONT color="green">023</FONT>     * Department of Computer Science               http://www.dcs.kcl.ac.uk<a name="line.23"></a>
+<FONT color="green">024</FONT>     * King's College London, UK                    http://www.kcl.ac.uk<a name="line.24"></a>
+<FONT color="green">025</FONT>     *<a name="line.25"></a>
+<FONT color="green">026</FONT>     * Please visit http://neobio.sourceforge.net<a name="line.26"></a>
+<FONT color="green">027</FONT>     *<a name="line.27"></a>
+<FONT color="green">028</FONT>     * This project was supervised by Professor Maxime Crochemore.<a name="line.28"></a>
+<FONT color="green">029</FONT>     *<a name="line.29"></a>
+<FONT color="green">030</FONT>     */<a name="line.30"></a>
+<FONT color="green">031</FONT>    <a name="line.31"></a>
+<FONT color="green">032</FONT>    package neobio.alignment;<a name="line.32"></a>
+<FONT color="green">033</FONT>    <a name="line.33"></a>
+<FONT color="green">034</FONT>    import java.io.Reader;<a name="line.34"></a>
+<FONT color="green">035</FONT>    import java.io.IOException;<a name="line.35"></a>
+<FONT color="green">036</FONT>    <a name="line.36"></a>
+<FONT color="green">037</FONT>    /**<a name="line.37"></a>
+<FONT color="green">038</FONT>     * This abstract class is the superclass of both global and local sequence alignment<a name="line.38"></a>
+<FONT color="green">039</FONT>     * algorithms (with linear gap penalty function) due to Maxime Crochemore, Gad Landau and<a name="line.39"></a>
+<FONT color="green">040</FONT>     * Michal Ziv-Ukelson (2002).<a name="line.40"></a>
+<FONT color="green">041</FONT>     *<a name="line.41"></a>
+<FONT color="green">042</FONT>     * &lt;P>This implementation derives from the paper of M.Crochemore, G.Landau and<a name="line.42"></a>
+<FONT color="green">043</FONT>     * M.Ziv-Ukelson, &lt;I>A Sub-quadratic Sequence Alignment Algorithm for Unrestricted Scoring<a name="line.43"></a>
+<FONT color="green">044</FONT>     * Matrices&lt;/I> (available here as<a name="line.44"></a>
+<FONT color="green">045</FONT>     * &lt;A HREF="doc-files/Crochemore_Landau_Ziv-Ukelson_algorithm.pdf">PDF&lt;/A> or<a name="line.45"></a>
+<FONT color="green">046</FONT>     * &lt;A HREF="doc-files/Crochemore_Landau_Ziv-Ukelson_algorithm.pdf">Postscript&lt;/A>).&lt;/P><a name="line.46"></a>
+<FONT color="green">047</FONT>     *<a name="line.47"></a>
+<FONT color="green">048</FONT>     * &lt;P>It employs Lempel-Ziv compression techniques to speed up the classic dynamic<a name="line.48"></a>
+<FONT color="green">049</FONT>     * programmin approach to sequence alignment (see {@linkplain NeedlemanWunsch} and<a name="line.49"></a>
+<FONT color="green">050</FONT>     * {@linkplain SmithWaterman} classes). It reduces the time and space complexity from<a name="line.50"></a>
+<FONT color="green">051</FONT>     * O(n&lt;SUP>2&lt;/SUP>) to O(n&lt;SUP>2&lt;/SUP>/log n). In fact, the complexity is actually O(h<a name="line.51"></a>
+<FONT color="green">052</FONT>     * n&lt;SUP>2&lt;/SUP>/log n), where 0 &lt;= h &lt;= 1 is a real number denoting the entropy of the<a name="line.52"></a>
+<FONT color="green">053</FONT>     * text (a measure of how compressible it is). This means that, the more compressible a<a name="line.53"></a>
+<FONT color="green">054</FONT>     * sequence is, the less memory the algorithm will require, and the faster it will<a name="line.54"></a>
+<FONT color="green">055</FONT>     * run.&lt;/P><a name="line.55"></a>
+<FONT color="green">056</FONT>     *<a name="line.56"></a>
+<FONT color="green">057</FONT>     * &lt;P>The idea behind this improvement is to identify repetitions in the sequences and<a name="line.57"></a>
+<FONT color="green">058</FONT>     * reuse the computation of their alignments. The first step is, therefore, to parse the<a name="line.58"></a>
+<FONT color="green">059</FONT>     * sequences into LZ78-like factors. LZ78 is a popular compression algorithm of the<a name="line.59"></a>
+<FONT color="green">060</FONT>     * Lempel-Ziv familiy due to J.Ziv and A.Lempel (1978). This factorisation is accomplished<a name="line.60"></a>
+<FONT color="green">061</FONT>     * by the {@linkplain FactorSequence} class (for more information about this<a name="line.61"></a>
+<FONT color="green">062</FONT>     * factorisation, please refer to the specification of that class) that builds a<a name="line.62"></a>
+<FONT color="green">063</FONT>     * doubly-linked list of factors. Each factor is an instance of the {@linkplain Factor}<a name="line.63"></a>
+<FONT color="green">064</FONT>     * class (refer to the specification of this class for more information).&lt;/P><a name="line.64"></a>
+<FONT color="green">065</FONT>     *<a name="line.65"></a>
+<FONT color="green">066</FONT>     * &lt;P>Once the sequences have been parsed, the algorithm builds a matrix of blocks, called<a name="line.66"></a>
+<FONT color="green">067</FONT>     * block table, that is vaguely similar to the dynamic programming matrix used by both<a name="line.67"></a>
+<FONT color="green">068</FONT>     * &lt;CODE>NeedlemanWunsch&lt;/CODE> and &lt;CODE>SmithWaterman&lt;/CODE>. Each block contains an<a name="line.68"></a>
+<FONT color="green">069</FONT>     * instance of an {@linkplain AlignmentBlock} (please refer to its specification for more<a name="line.69"></a>
+<FONT color="green">070</FONT>     * information on what information is stored) and represents the alignment beteween one<a name="line.70"></a>
+<FONT color="green">071</FONT>     * factor of each sequence. This block table is, in fact, a partition of the alignment<a name="line.71"></a>
+<FONT color="green">072</FONT>     * graph.&lt;/P><a name="line.72"></a>
+<FONT color="green">073</FONT>     *<a name="line.73"></a>
+<FONT color="green">074</FONT>     * &lt;P>Consider a block B which corresponds to the alignment of factor F1 = xa from<a name="line.74"></a>
+<FONT color="green">075</FONT>     * sequence S1 and factor F2 = yb from sequence S2. Here, F1 extends a previous factor of<a name="line.75"></a>
+<FONT color="green">076</FONT>     * S1 with character a, while F2 extends a previous factor of S2 with character b. We can<a name="line.76"></a>
+<FONT color="green">077</FONT>     * define the input border of B as the set of values at the left and top borders of block<a name="line.77"></a>
+<FONT color="green">078</FONT>     * B, and the output border as the set of values at the right and bottom borders of B.<a name="line.78"></a>
+<FONT color="green">079</FONT>     * Moreover, we can define the following prefix blocks of B:&lt;/P><a name="line.79"></a>
+<FONT color="green">080</FONT>     *<a name="line.80"></a>
+<FONT color="green">081</FONT>     * &lt;UL><a name="line.81"></a>
+<FONT color="green">082</FONT>     * &lt;LI>&lt;B>Left prefix&lt;/B> - is the block that contains the alignment of factor F1 with<a name="line.82"></a>
+<FONT color="green">083</FONT>     * a factor F2' = y (a prefix of factor F2).<a name="line.83"></a>
+<FONT color="green">084</FONT>     * &lt;LI>&lt;B>Diagonal prefix&lt;/B> - is the block that contains the alignment of factor F1' = x<a name="line.84"></a>
+<FONT color="green">085</FONT>     * (a prefix of factor F1) with a factor F2' = y (a prefix of factor F2).<a name="line.85"></a>
+<FONT color="green">086</FONT>     * &lt;LI>&lt;B>Top prefix&lt;/B> - is the block that contains the alignment of factor F1' = x (a<a name="line.86"></a>
+<FONT color="green">087</FONT>     * prefix of factor F1) with factor F2.<a name="line.87"></a>
+<FONT color="green">088</FONT>     * &lt;/UL><a name="line.88"></a>
+<FONT color="green">089</FONT>     *<a name="line.89"></a>
+<FONT color="green">090</FONT>     * &lt;P>Note that each factor has a pointer to its prefix factor, called ancestor (see the<a name="line.90"></a>
+<FONT color="green">091</FONT>     * specification of the &lt;CODE>Factor&lt;/CODE> class). This pointer makes it easy to retrieve<a name="line.91"></a>
+<FONT color="green">092</FONT>     * any of the three prefix blocks of B in constant time.&lt;/P><a name="line.92"></a>
+<FONT color="green">093</FONT>     *<a name="line.93"></a>
+<FONT color="green">094</FONT>     * &lt;P>Rather than computing each value of the alignment block B, the algorithm will only<a name="line.94"></a>
+<FONT color="green">095</FONT>     * compute the values on its input and output borders. This is precisely what makes it<a name="line.95"></a>
+<FONT color="green">096</FONT>     * more efficient.&lt;/P><a name="line.96"></a>
+<FONT color="green">097</FONT>     *<a name="line.97"></a>
+<FONT color="green">098</FONT>     * &lt;P>In this class there is a general specification of how the block table is computed<a name="line.98"></a>
+<FONT color="green">099</FONT>     * (see the {@link #computeBlockTable computeBlockTable} method for details). The actual<a name="line.99"></a>
+<FONT color="green">100</FONT>     * method depends on the subclasses. In general, there are two phases:&lt;/P><a name="line.100"></a>
+<FONT color="green">101</FONT>     *<a name="line.101"></a>
+<FONT color="green">102</FONT>     * &lt;UL><a name="line.102"></a>
+<FONT color="green">103</FONT>     * &lt;LI>&lt;B>Encoding&lt;/B> - the structure of a block B is studied and represented in an<a name="line.103"></a>
+<FONT color="green">104</FONT>     * efficient way by computing weights of optimal paths connecting each entry of its input<a name="line.104"></a>
+<FONT color="green">105</FONT>     * border to each entry of its output border. This information is encoded in a DIST matrix<a name="line.105"></a>
+<FONT color="green">106</FONT>     * where DIST[i,j] stores the weight of an optimal paths connecting entry i of the input<a name="line.106"></a>
+<FONT color="green">107</FONT>     * border to entry j the output border of B.<a name="line.107"></a>
+<FONT color="green">108</FONT>     * &lt;LI>&lt;B>Propagation&lt;/B> - the input border of a block B is retrieved (from the left and<a name="line.108"></a>
+<FONT color="green">109</FONT>     * top blocks of B) and its output border is computed with the help of the DIST matrix.<a name="line.109"></a>
+<FONT color="green">110</FONT>     * &lt;/UL><a name="line.110"></a>
+<FONT color="green">111</FONT>     *<a name="line.111"></a>
+<FONT color="green">112</FONT>     * &lt;P>In fact, for each block, only one column of the DIST matrix needs to be computed,<a name="line.112"></a>
+<FONT color="green">113</FONT>     * all other columns are actually retrieved from its prefix blocks. This is precisely what<a name="line.113"></a>
+<FONT color="green">114</FONT>     * is accomplished by the {@link #assembleDistMatrix assembleDistMatrix} method found in<a name="line.114"></a>
+<FONT color="green">115</FONT>     * this class (it is general enough for both global and local alignment versions of the<a name="line.115"></a>
+<FONT color="green">116</FONT>     * algorithm.&lt;/P><a name="line.116"></a>
+<FONT color="green">117</FONT>     *<a name="line.117"></a>
+<FONT color="green">118</FONT>     * &lt;P>From the DIST matrix, we obtain the OUT matrix defined as<a name="line.118"></a>
+<FONT color="green">119</FONT>     * &lt;CODE>OUT[i,j] = I[i] + DIST[i,j]&lt;/CODE> where I is the input border array. This means<a name="line.119"></a>
+<FONT color="green">120</FONT>     * that the OUT matrix is the DIST matrix updated by the input border of a block. The<a name="line.120"></a>
+<FONT color="green">121</FONT>     * output border is then computed from the OUT matrix by taking the maximum value of each<a name="line.121"></a>
+<FONT color="green">122</FONT>     * column. This class also have a general method for assembling the input border (see<a name="line.122"></a>
+<FONT color="green">123</FONT>     * {@link #assembleInputBorder assembleInputBorder}&lt;/P><a name="line.123"></a>
+<FONT color="green">124</FONT>     *<a name="line.124"></a>
+<FONT color="green">125</FONT>     * &lt;P>The OUT matrix is encoded by the {@linkplain OutMatrix} class that takes as<a name="line.125"></a>
+<FONT color="green">126</FONT>     * both a DIST matrix and an input border array. Note that &lt;B>it does not compute the OUT<a name="line.126"></a>
+<FONT color="green">127</FONT>     * matrix&lt;/B>, it just stores the necessary information to retrieve a value at any<a name="line.127"></a>
+<FONT color="green">128</FONT>     * position of the matrix.&lt;/P><a name="line.128"></a>
+<FONT color="green">129</FONT>     *<a name="line.129"></a>
+<FONT color="green">130</FONT>     * &lt;P>A naive approach to compute the output border of a block from the OUT matrix of size<a name="line.130"></a>
+<FONT color="green">131</FONT>     * n x n would take a time proportional to n&lt;SUP>2&lt;/SUP>. However, it happens that, due to<a name="line.131"></a>
+<FONT color="green">132</FONT>     * the nature of the DIST matrix, both DIST and OUT matrices are Monge arrays, which<a name="line.132"></a>
+<FONT color="green">133</FONT>     * implies that they are also &lt;I>totally monotone&lt;/I>. This property allows the<a name="line.133"></a>
+<FONT color="green">134</FONT>     * computation of the output border of B in linear time with the SMAWK algorithm (see the<a name="line.134"></a>
+<FONT color="green">135</FONT>     * specification of the {@linkplain Smawk} class for more information on SMAWK).&lt;/P><a name="line.135"></a>
+<FONT color="green">136</FONT>     *<a name="line.136"></a>
+<FONT color="green">137</FONT>     * &lt;P>This class contains a general specification that is pertinent to both global and<a name="line.137"></a>
+<FONT color="green">138</FONT>     * local versions of the algorithm. For more information on each version of, please refer<a name="line.138"></a>
+<FONT color="green">139</FONT>     * to the appropriate subclass.&lt;/P><a name="line.139"></a>
+<FONT color="green">140</FONT>     *<a name="line.140"></a>
+<FONT color="green">141</FONT>     * &lt;P>&lt;B>A note about the performance of these algorithms.&lt;/B> Although theoretical<a name="line.141"></a>
+<FONT color="green">142</FONT>     * results suggest that these algorithms are faster and consume less memory than the<a name="line.142"></a>
+<FONT color="green">143</FONT>     * classical methods, in practice it is hard to realise their performance gains.<a name="line.143"></a>
+<FONT color="green">144</FONT>     *<a name="line.144"></a>
+<FONT color="green">145</FONT>     * &lt;P>These algorithms are extremely complex and require the storage of many extra<a name="line.145"></a>
+<FONT color="green">146</FONT>     * pointers and other auxiliary data for each block (see the &lt;CODE>AlignmentBlock&lt;/CODE><a name="line.146"></a>
+<FONT color="green">147</FONT>     * class for more details). Hence, even though the space requirement is<a name="line.147"></a>
+<FONT color="green">148</FONT>     * O(n&lt;SUP>2&lt;/SUP>/log n), which is less than O(n&lt;SUP>2&lt;/SUP>), in practice, for most of<a name="line.148"></a>
+<FONT color="green">149</FONT>     * the cases these algorithms will take more time and memory space than their clasical<a name="line.149"></a>
+<FONT color="green">150</FONT>     * counterparts (we have to keep in mind that the Big Oh notation ignores all constants<a name="line.150"></a>
+<FONT color="green">151</FONT>     * involved).&lt;/P><a name="line.151"></a>
+<FONT color="green">152</FONT>     *<a name="line.152"></a>
+<FONT color="green">153</FONT>     * &lt;P>Therefore, in order to realise the full power of these algorithms, they have to be<a name="line.153"></a>
+<FONT color="green">154</FONT>     * used with extremly large and redundant sequences. This will allow a proper<a name="line.154"></a>
+<FONT color="green">155</FONT>     * reutilisation of the computations and, maybe, provide an improvement in terms of space<a name="line.155"></a>
+<FONT color="green">156</FONT>     * and run time. For instance, it is easy to devise such a sequence if we use a<a name="line.156"></a>
+<FONT color="green">157</FONT>     * one-character alphabet because, in this case, a sequence is factorised into a series<a name="line.157"></a>
+<FONT color="green">158</FONT>     * of factors that are a prefix of the next.&lt;/P><a name="line.158"></a>
+<FONT color="green">159</FONT>     *<a name="line.159"></a>
+<FONT color="green">160</FONT>     * @author Sergio A. de Carvalho Jr.<a name="line.160"></a>
+<FONT color="green">161</FONT>     * @see CrochemoreLandauZivUkelsonGlobalAlignment<a name="line.161"></a>
+<FONT color="green">162</FONT>     * @see CrochemoreLandauZivUkelsonLocalAlignment<a name="line.162"></a>
+<FONT color="green">163</FONT>     * @see NeedlemanWunsch<a name="line.163"></a>
+<FONT color="green">164</FONT>     * @see SmithWaterman<a name="line.164"></a>
+<FONT color="green">165</FONT>     * @see FactorSequence<a name="line.165"></a>
+<FONT color="green">166</FONT>     * @see AlignmentBlock<a name="line.166"></a>
+<FONT color="green">167</FONT>     * @see OutMatrix<a name="line.167"></a>
+<FONT color="green">168</FONT>     * @see Smawk<a name="line.168"></a>
+<FONT color="green">169</FONT>     * @see #computeBlockTable<a name="line.169"></a>
+<FONT color="green">170</FONT>     * @see #assembleDistMatrix<a name="line.170"></a>
+<FONT color="green">171</FONT>     */<a name="line.171"></a>
+<FONT color="green">172</FONT>    public abstract class CrochemoreLandauZivUkelson extends PairwiseAlignmentAlgorithm<a name="line.172"></a>
+<FONT color="green">173</FONT>    {<a name="line.173"></a>
+<FONT color="green">174</FONT>            /**<a name="line.174"></a>
+<FONT color="green">175</FONT>             * A constant that indicates that the source of an optimal path has been reached in a<a name="line.175"></a>
+<FONT color="green">176</FONT>             * block and that the trace back procedure to retrieve a high scoring alignment can<a name="line.176"></a>
+<FONT color="green">177</FONT>             * stop.<a name="line.177"></a>
+<FONT color="green">178</FONT>             */<a name="line.178"></a>
+<FONT color="green">179</FONT>            protected static final byte STOP_DIRECTION = 0;<a name="line.179"></a>
+<FONT color="green">180</FONT>    <a name="line.180"></a>
+<FONT color="green">181</FONT>            /**<a name="line.181"></a>
+<FONT color="green">182</FONT>             * A constant that indicates that the left direction must be followed to reach the<a name="line.182"></a>
+<FONT color="green">183</FONT>             * source of an optimal path in a block during the trace back procedure to retrieve a<a name="line.183"></a>
+<FONT color="green">184</FONT>             * high scoring alignment.<a name="line.184"></a>
+<FONT color="green">185</FONT>             */<a name="line.185"></a>
+<FONT color="green">186</FONT>            protected static final byte LEFT_DIRECTION = 1;<a name="line.186"></a>
+<FONT color="green">187</FONT>    <a name="line.187"></a>
+<FONT color="green">188</FONT>            /**<a name="line.188"></a>
+<FONT color="green">189</FONT>             * A constant that indicates that the diagonal direction must be followed to reach the<a name="line.189"></a>
+<FONT color="green">190</FONT>             * source of an optimal path in a block during the trace back procedure to retrieve a<a name="line.190"></a>
+<FONT color="green">191</FONT>             * high scoring alignment.<a name="line.191"></a>
+<FONT color="green">192</FONT>             */<a name="line.192"></a>
+<FONT color="green">193</FONT>            protected static final byte DIAGONAL_DIRECTION = 2;<a name="line.193"></a>
+<FONT color="green">194</FONT>    <a name="line.194"></a>
+<FONT color="green">195</FONT>            /**<a name="line.195"></a>
+<FONT color="green">196</FONT>             * A constant that indicates that the top direction must be followed to reach the<a name="line.196"></a>
+<FONT color="green">197</FONT>             * source of an optimal path in a block during the trace back procedure to retrieve a<a name="line.197"></a>
+<FONT color="green">198</FONT>             * high scoring alignment.<a name="line.198"></a>
+<FONT color="green">199</FONT>             */<a name="line.199"></a>
+<FONT color="green">200</FONT>            protected static final byte TOP_DIRECTION = 3;<a name="line.200"></a>
+<FONT color="green">201</FONT>    <a name="line.201"></a>
+<FONT color="green">202</FONT>            /**<a name="line.202"></a>
+<FONT color="green">203</FONT>             * The first factorised sequence being aligned.<a name="line.203"></a>
+<FONT color="green">204</FONT>             */<a name="line.204"></a>
+<FONT color="green">205</FONT>            protected FactorSequence seq1;<a name="line.205"></a>
+<FONT color="green">206</FONT>    <a name="line.206"></a>
+<FONT color="green">207</FONT>            /**<a name="line.207"></a>
+<FONT color="green">208</FONT>             * The second factorised sequence being aligned.<a name="line.208"></a>
+<FONT color="green">209</FONT>             */<a name="line.209"></a>
+<FONT color="green">210</FONT>            protected FactorSequence seq2;<a name="line.210"></a>
+<FONT color="green">211</FONT>    <a name="line.211"></a>
+<FONT color="green">212</FONT>            /**<a name="line.212"></a>
+<FONT color="green">213</FONT>             * The block table, which is a matrix of alignment blocks where each block represents<a name="line.213"></a>
+<FONT color="green">214</FONT>             * the alignment between one factor of each sequence.<a name="line.214"></a>
+<FONT color="green">215</FONT>             */<a name="line.215"></a>
+<FONT color="green">216</FONT>            protected AlignmentBlock[][] block_table;<a name="line.216"></a>
+<FONT color="green">217</FONT>    <a name="line.217"></a>
+<FONT color="green">218</FONT>            /**<a name="line.218"></a>
+<FONT color="green">219</FONT>             * Number of rows of the block table. It is determined by the number of factors of the<a name="line.219"></a>
+<FONT color="green">220</FONT>             * first sequence.<a name="line.220"></a>
+<FONT color="green">221</FONT>             */<a name="line.221"></a>
+<FONT color="green">222</FONT>            protected int num_rows;<a name="line.222"></a>
+<FONT color="green">223</FONT>    <a name="line.223"></a>
+<FONT color="green">224</FONT>            /**<a name="line.224"></a>
+<FONT color="green">225</FONT>             * Number of columns of the block table. It is determined by the number of factors of<a name="line.225"></a>
+<FONT color="green">226</FONT>             * the second sequence.<a name="line.226"></a>
+<FONT color="green">227</FONT>             */<a name="line.227"></a>
+<FONT color="green">228</FONT>            protected int num_cols;<a name="line.228"></a>
+<FONT color="green">229</FONT>    <a name="line.229"></a>
+<FONT color="green">230</FONT>            /**<a name="line.230"></a>
+<FONT color="green">231</FONT>             * An instance of the &lt;CODE>Smawk&lt;/CODE> class that implements the SMAWK algorithm to<a name="line.231"></a>
+<FONT color="green">232</FONT>             * compute the column maxima of a totally monotone matrix. It is used to speed up the<a name="line.232"></a>
+<FONT color="green">233</FONT>             * computation of the output border of a block.<a name="line.233"></a>
+<FONT color="green">234</FONT>             */<a name="line.234"></a>
+<FONT color="green">235</FONT>            protected Smawk smawk = new Smawk();<a name="line.235"></a>
+<FONT color="green">236</FONT>    <a name="line.236"></a>
+<FONT color="green">237</FONT>            /**<a name="line.237"></a>
+<FONT color="green">238</FONT>             * An instance of the &lt;CODE>OutMatrix&lt;/CODE> class that encodes the OUT matrix of a<a name="line.238"></a>
+<FONT color="green">239</FONT>             * block when supplied with the DIST matrix and the input border array of a block.<a name="line.239"></a>
+<FONT color="green">240</FONT>             * Note that it does not compute the OUT matrix itselft, it just stores the necessary<a name="line.240"></a>
+<FONT color="green">241</FONT>             * information to retrieve a value at any position of the matrix.<a name="line.241"></a>
+<FONT color="green">242</FONT>             *<a name="line.242"></a>
+<FONT color="green">243</FONT>             * &lt;P>This object is then used to compute the output border of a block with the<a name="line.243"></a>
+<FONT color="green">244</FONT>             * &lt;CODE>Smawk&lt;/CODE> class. Note that the &lt;CODE>OutMatrix&lt;/CODE> class implements the<a name="line.244"></a>
+<FONT color="green">245</FONT>             * &lt;CODE>Matrix&lt;/CODE> interface as required by the &lt;CODE>Smawk&lt;/CODE> class.<a name="line.245"></a>
+<FONT color="green">246</FONT>             *<a name="line.246"></a>
+<FONT color="green">247</FONT>             * @see Matrix<a name="line.247"></a>
+<FONT color="green">248</FONT>             * @see Smawk<a name="line.248"></a>
+<FONT color="green">249</FONT>             */<a name="line.249"></a>
+<FONT color="green">250</FONT>            protected OutMatrix out_matrix = new OutMatrix ();<a name="line.250"></a>
+<FONT color="green">251</FONT>    <a name="line.251"></a>
+<FONT color="green">252</FONT>            /**<a name="line.252"></a>
+<FONT color="green">253</FONT>             * Loads sequences into &lt;CODE>FactorSequence&lt;/CODE> instances. In case of any error,<a name="line.253"></a>
+<FONT color="green">254</FONT>             * an exception is raised by the constructor of &lt;CODE>FactorSequence&lt;/CODE> (please<a name="line.254"></a>
+<FONT color="green">255</FONT>             * check the specification of that class for specific requirements).<a name="line.255"></a>
+<FONT color="green">256</FONT>             *<a name="line.256"></a>
+<FONT color="green">257</FONT>             * &lt;P>A &lt;CODE>FactorSequence&lt;/CODE> is an LZ78-like factorisation of the sequences<a name="line.257"></a>
+<FONT color="green">258</FONT>             * being aligned.<a name="line.258"></a>
+<FONT color="green">259</FONT>             *<a name="line.259"></a>
+<FONT color="green">260</FONT>             * @param input1 Input for first sequence<a name="line.260"></a>
+<FONT color="green">261</FONT>             * @param input2 Input for second sequence<a name="line.261"></a>
+<FONT color="green">262</FONT>             * @throws IOException If an I/O error occurs when reading the sequences<a name="line.262"></a>
+<FONT color="green">263</FONT>             * @throws InvalidSequenceException If the sequences are not valid<a name="line.263"></a>
+<FONT color="green">264</FONT>             * @see FactorSequence<a name="line.264"></a>
+<FONT color="green">265</FONT>             */<a name="line.265"></a>
+<FONT color="green">266</FONT>            protected void loadSequencesInternal (Reader input1, Reader input2)<a name="line.266"></a>
+<FONT color="green">267</FONT>                    throws IOException, InvalidSequenceException<a name="line.267"></a>
+<FONT color="green">268</FONT>            {<a name="line.268"></a>
+<FONT color="green">269</FONT>                    // load sequences into instances of CharSequence<a name="line.269"></a>
+<FONT color="green">270</FONT>                    this.seq1 = new FactorSequence(input1);<a name="line.270"></a>
+<FONT color="green">271</FONT>                    this.seq2 = new FactorSequence(input2);<a name="line.271"></a>
+<FONT color="green">272</FONT>    <a name="line.272"></a>
+<FONT color="green">273</FONT>                    // determine the block table's dimensions<a name="line.273"></a>
+<FONT color="green">274</FONT>                    this.num_rows = seq1.numFactors();<a name="line.274"></a>
+<FONT color="green">275</FONT>                    this.num_cols = seq2.numFactors();<a name="line.275"></a>
+<FONT color="green">276</FONT>            }<a name="line.276"></a>
+<FONT color="green">277</FONT>    <a name="line.277"></a>
+<FONT color="green">278</FONT>            /**<a name="line.278"></a>
+<FONT color="green">279</FONT>             * Frees pointers to loaded sequences and the the block table so that their data can<a name="line.279"></a>
+<FONT color="green">280</FONT>             * be garbage collected.<a name="line.280"></a>
+<FONT color="green">281</FONT>             */<a name="line.281"></a>
+<FONT color="green">282</FONT>            protected void unloadSequencesInternal ()<a name="line.282"></a>
+<FONT color="green">283</FONT>            {<a name="line.283"></a>
+<FONT color="green">284</FONT>                    this.seq1 = null;<a name="line.284"></a>
+<FONT color="green">285</FONT>                    this.seq2 = null;<a name="line.285"></a>
+<FONT color="green">286</FONT>                    this.block_table = null;<a name="line.286"></a>
+<FONT color="green">287</FONT>            }<a name="line.287"></a>
+<FONT color="green">288</FONT>    <a name="line.288"></a>
+<FONT color="green">289</FONT>            /**<a name="line.289"></a>
+<FONT color="green">290</FONT>             * Computes the block table (the result depends on subclasses, see<a name="line.290"></a>
+<FONT color="green">291</FONT>             * &lt;CODE>computeBlockTable&lt;/CODE> for details) and requests subclasses to retrieve an<a name="line.291"></a>
+<FONT color="green">292</FONT>             * optimal alignment between the loaded sequences. The actual product depends on the<a name="line.292"></a>
+<FONT color="green">293</FONT>             * subclasses which can produce a global (see<a name="line.293"></a>
+<FONT color="green">294</FONT>             * &lt;CODE>CrochemoreLandauZivUkelsonGlobalAlignment&lt;/CODE>) or local alignment (see<a name="line.294"></a>
+<FONT color="green">295</FONT>             * &lt;CODE>CrochemoreLandauZivUkelsonLocalAlignment&lt;/CODE>).<a name="line.295"></a>
+<FONT color="green">296</FONT>             *<a name="line.296"></a>
+<FONT color="green">297</FONT>             * &lt;P>Subclasses are required to implement the &lt;CODE>buildOptimalAlignment&lt;/CODE><a name="line.297"></a>
+<FONT color="green">298</FONT>             * abstract method defined by this class according to their own method.&lt;/P><a name="line.298"></a>
+<FONT color="green">299</FONT>             *<a name="line.299"></a>
+<FONT color="green">300</FONT>             * @return an optimal alignment between the loaded sequences<a name="line.300"></a>
+<FONT color="green">301</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.301"></a>
+<FONT color="green">302</FONT>             * with the loaded sequences.<a name="line.302"></a>
+<FONT color="green">303</FONT>             * @see CrochemoreLandauZivUkelsonGlobalAlignment<a name="line.303"></a>
+<FONT color="green">304</FONT>             * @see CrochemoreLandauZivUkelsonLocalAlignment<a name="line.304"></a>
+<FONT color="green">305</FONT>             * @see #computeBlockTable<a name="line.305"></a>
+<FONT color="green">306</FONT>             * @see #buildOptimalAlignment<a name="line.306"></a>
+<FONT color="green">307</FONT>             */<a name="line.307"></a>
+<FONT color="green">308</FONT>            protected PairwiseAlignment computePairwiseAlignment ()<a name="line.308"></a>
+<FONT color="green">309</FONT>                    throws IncompatibleScoringSchemeException<a name="line.309"></a>
+<FONT color="green">310</FONT>            {<a name="line.310"></a>
+<FONT color="green">311</FONT>                    // compute block table<a name="line.311"></a>
+<FONT color="green">312</FONT>                    computeBlockTable ();<a name="line.312"></a>
+<FONT color="green">313</FONT>    <a name="line.313"></a>
+<FONT color="green">314</FONT>                    // build and return an optimal global alignment<a name="line.314"></a>
+<FONT color="green">315</FONT>                    PairwiseAlignment alignment = buildOptimalAlignment ();<a name="line.315"></a>
+<FONT color="green">316</FONT>    <a name="line.316"></a>
+<FONT color="green">317</FONT>                    // allow the block table to be garbage collected<a name="line.317"></a>
+<FONT color="green">318</FONT>                    block_table = null;<a name="line.318"></a>
+<FONT color="green">319</FONT>    <a name="line.319"></a>
+<FONT color="green">320</FONT>                    return alignment;<a name="line.320"></a>
+<FONT color="green">321</FONT>            }<a name="line.321"></a>
+<FONT color="green">322</FONT>    <a name="line.322"></a>
+<FONT color="green">323</FONT>            /**<a name="line.323"></a>
+<FONT color="green">324</FONT>             * Computes the block table (the result depends on subclasses, see<a name="line.324"></a>
+<FONT color="green">325</FONT>             * &lt;CODE>computeBlockTable&lt;/CODE> for details) and requests subclasses to locate the<a name="line.325"></a>
+<FONT color="green">326</FONT>             * score of the highest scoring alignment between the two sequences in the block<a name="line.326"></a>
+<FONT color="green">327</FONT>             * table. The result depends on the subclasses, and either a global alignment<a name="line.327"></a>
+<FONT color="green">328</FONT>             * (see &lt;CODE>CrochemoreLandauZivUkelsonGlobalAlignment&lt;/CODE>) or local alignment<a name="line.328"></a>
+<FONT color="green">329</FONT>             * score (see &lt;CODE>CrochemoreLandauZivUkelsonLocalAlignment&lt;/CODE>) will be produced.<a name="line.329"></a>
+<FONT color="green">330</FONT>             *<a name="line.330"></a>
+<FONT color="green">331</FONT>             * &lt;P>Subclasses are required to implement the &lt;CODE>locateScore&lt;/CODE> abstract<a name="line.331"></a>
+<FONT color="green">332</FONT>             * method defined by this class according to their own method.&lt;/P><a name="line.332"></a>
+<FONT color="green">333</FONT>             *<a name="line.333"></a>
+<FONT color="green">334</FONT>             * &lt;P>Note that this method calculates the similarity value only (it doesn't trace<a name="line.334"></a>
+<FONT color="green">335</FONT>             * back into the block table to retrieve the alignment itself).&lt;/P><a name="line.335"></a>
+<FONT color="green">336</FONT>             *<a name="line.336"></a>
+<FONT color="green">337</FONT>             * @return the score of the highest scoring alignment between the loaded sequences<a name="line.337"></a>
+<FONT color="green">338</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.338"></a>
+<FONT color="green">339</FONT>             * with the loaded sequences.<a name="line.339"></a>
+<FONT color="green">340</FONT>             * @see CrochemoreLandauZivUkelsonGlobalAlignment<a name="line.340"></a>
+<FONT color="green">341</FONT>             * @see CrochemoreLandauZivUkelsonLocalAlignment<a name="line.341"></a>
+<FONT color="green">342</FONT>             * @see #locateScore<a name="line.342"></a>
+<FONT color="green">343</FONT>             */<a name="line.343"></a>
+<FONT color="green">344</FONT>            protected int computeScore () throws IncompatibleScoringSchemeException<a name="line.344"></a>
+<FONT color="green">345</FONT>            {<a name="line.345"></a>
+<FONT color="green">346</FONT>                    // compute block table<a name="line.346"></a>
+<FONT color="green">347</FONT>                    computeBlockTable ();<a name="line.347"></a>
+<FONT color="green">348</FONT>    <a name="line.348"></a>
+<FONT color="green">349</FONT>                    // get score<a name="line.349"></a>
+<FONT color="green">350</FONT>                    int     score = locateScore ();<a name="line.350"></a>
+<FONT color="green">351</FONT>    <a name="line.351"></a>
+<FONT color="green">352</FONT>                    // allow the block table to be garbage collected<a name="line.352"></a>
+<FONT color="green">353</FONT>                    block_table = null;<a name="line.353"></a>
+<FONT color="green">354</FONT>    <a name="line.354"></a>
+<FONT color="green">355</FONT>                    return score;<a name="line.355"></a>
+<FONT color="green">356</FONT>            }<a name="line.356"></a>
+<FONT color="green">357</FONT>    <a name="line.357"></a>
+<FONT color="green">358</FONT>            /**<a name="line.358"></a>
+<FONT color="green">359</FONT>             * Computes the block table. This method is a general specification of how the block<a name="line.359"></a>
+<FONT color="green">360</FONT>             * table should be computed. It creates the block table according to the number of<a name="line.360"></a>
+<FONT color="green">361</FONT>             * factors of each sequence. It then goes over each position of the block table,<a name="line.361"></a>
+<FONT color="green">362</FONT>             * retrieves the corresponding factors from each sequence, and repasses the<a name="line.362"></a>
+<FONT color="green">363</FONT>             * information to the subclasses that will do the actual computation of each block<a name="line.363"></a>
+<FONT color="green">364</FONT>             * using the scoring scheme previously set.<a name="line.364"></a>
+<FONT color="green">365</FONT>             *<a name="line.365"></a>
+<FONT color="green">366</FONT>             * &lt;P>There are four different cases that defines four abstract methods in this class,<a name="line.366"></a>
+<FONT color="green">367</FONT>             * which subclasses must implement:&lt;/P><a name="line.367"></a>
+<FONT color="green">368</FONT>             *<a name="line.368"></a>
+<FONT color="green">369</FONT>             * &lt;UL><a name="line.369"></a>
+<FONT color="green">370</FONT>             * &lt;LI>&lt;B>createRootBlock&lt;/B> - creates and computes block at row 0, column 0;<a name="line.370"></a>
+<FONT color="green">371</FONT>             * &lt;LI>&lt;B>createFirstColumnBlock&lt;/B> - creates and computes blocks at column 0 which<a name="line.371"></a>
+<FONT color="green">372</FONT>             * corresponds to alignment blocks between factors of sequence 1 and an empty string;<a name="line.372"></a>
+<FONT color="green">373</FONT>             * &lt;LI>&lt;B>createFirstRowBlock&lt;/B> - creates and computes blocks at row 0 which<a name="line.373"></a>
+<FONT color="green">374</FONT>             * corresponds to alignment blocks between factors of sequence 2 and an empty string;<a name="line.374"></a>
+<FONT color="green">375</FONT>             * &lt;LI>&lt;B>createBlock&lt;/B> - creates and computes blocks at row > 0 and column > 0<a name="line.375"></a>
+<FONT color="green">376</FONT>             * which corresponds to alignment blocks between one factor of sequence 1 and one<a name="line.376"></a>
+<FONT color="green">377</FONT>             * factor of sequence 2;<a name="line.377"></a>
+<FONT color="green">378</FONT>             * &lt;/UL><a name="line.378"></a>
+<FONT color="green">379</FONT>             *<a name="line.379"></a>
+<FONT color="green">380</FONT>             * &lt;P>Note that each factor has a serial number which indicates its order in the list<a name="line.380"></a>
+<FONT color="green">381</FONT>             * of factors of a sequence. This number will match with the row and column index of<a name="line.381"></a>
+<FONT color="green">382</FONT>             * a block in the block table. For instance, if a block has factors F1 and F2 with<a name="line.382"></a>
+<FONT color="green">383</FONT>             * serial numbers 12 and 53, respectively, this means that this block is found at row<a name="line.383"></a>
+<FONT color="green">384</FONT>             * 12, column 53 of the block table.&lt;/P><a name="line.384"></a>
+<FONT color="green">385</FONT>             *<a name="line.385"></a>
+<FONT color="green">386</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.386"></a>
+<FONT color="green">387</FONT>             * with the loaded sequences.<a name="line.387"></a>
+<FONT color="green">388</FONT>             * @see #createRootBlock<a name="line.388"></a>
+<FONT color="green">389</FONT>             * @see #createFirstColumnBlock<a name="line.389"></a>
+<FONT color="green">390</FONT>             * @see #createFirstRowBlock<a name="line.390"></a>
+<FONT color="green">391</FONT>             * @see #createBlock<a name="line.391"></a>
+<FONT color="green">392</FONT>             */<a name="line.392"></a>
+<FONT color="green">393</FONT>            protected void computeBlockTable () throws IncompatibleScoringSchemeException<a name="line.393"></a>
+<FONT color="green">394</FONT>            {<a name="line.394"></a>
+<FONT color="green">395</FONT>                    Factor  factor1, factor2;<a name="line.395"></a>
+<FONT color="green">396</FONT>                    int             r, c, max_length;<a name="line.396"></a>
+<FONT color="green">397</FONT>    <a name="line.397"></a>
+<FONT color="green">398</FONT>                    // create block table<a name="line.398"></a>
+<FONT color="green">399</FONT>                    block_table = new AlignmentBlock[num_rows][num_cols];<a name="line.399"></a>
+<FONT color="green">400</FONT>    <a name="line.400"></a>
+<FONT color="green">401</FONT>                    // find the length of the longest sequence (number of characters)<a name="line.401"></a>
+<FONT color="green">402</FONT>                    max_length = Math.max(seq1.numChars(), seq2.numChars());<a name="line.402"></a>
+<FONT color="green">403</FONT>    <a name="line.403"></a>
+<FONT color="green">404</FONT>                    // prepares the OUT matrix object<a name="line.404"></a>
+<FONT color="green">405</FONT>                    out_matrix.init (max_length, scoring.maxAbsoluteScore());<a name="line.405"></a>
+<FONT color="green">406</FONT>    <a name="line.406"></a>
+<FONT color="green">407</FONT>                    // start at the root of each trie<a name="line.407"></a>
+<FONT color="green">408</FONT>                    factor1 = seq1.getRootFactor();<a name="line.408"></a>
+<FONT color="green">409</FONT>                    factor2 = seq2.getRootFactor();<a name="line.409"></a>
+<FONT color="green">410</FONT>    <a name="line.410"></a>
+<FONT color="green">411</FONT>                    // check if roots' indexes are both zero<a name="line.411"></a>
+<FONT color="green">412</FONT>                    if (factor1.getSerialNumber() != 0 || factor2.getSerialNumber() != 0)<a name="line.412"></a>
+<FONT color="green">413</FONT>                            throw new IndexOutOfBoundsException ("Unexpected factor index.");<a name="line.413"></a>
+<FONT color="green">414</FONT>    <a name="line.414"></a>
+<FONT color="green">415</FONT>                    // initiate first cell of block table<a name="line.415"></a>
+<FONT color="green">416</FONT>                    block_table[0][0] = createRootBlock (factor1, factor2);<a name="line.416"></a>
+<FONT color="green">417</FONT>    <a name="line.417"></a>
+<FONT color="green">418</FONT>                    // compute first row<a name="line.418"></a>
+<FONT color="green">419</FONT>                    for (c = 1; c &lt; num_cols; c++)<a name="line.419"></a>
+<FONT color="green">420</FONT>                    {<a name="line.420"></a>
+<FONT color="green">421</FONT>                            factor2 = factor2.getNext();<a name="line.421"></a>
+<FONT color="green">422</FONT>    <a name="line.422"></a>
+<FONT color="green">423</FONT>                            // check if factor2's index equals its column number (except for<a name="line.423"></a>
+<FONT color="green">424</FONT>                            // the last factor that can be a repetition of a previous one)<a name="line.424"></a>
+<FONT color="green">425</FONT>                            if (c &lt; num_cols - 1 && factor2.getSerialNumber() != c)<a name="line.425"></a>
+<FONT color="green">426</FONT>                                    throw new IndexOutOfBoundsException ("Unexpected factor index.");<a name="line.426"></a>
+<FONT color="green">427</FONT>    <a name="line.427"></a>
+<FONT color="green">428</FONT>                            block_table[0][c] = createFirstRowBlock (factor1, factor2, c);<a name="line.428"></a>
+<FONT color="green">429</FONT>                    }<a name="line.429"></a>
+<FONT color="green">430</FONT>    <a name="line.430"></a>
+<FONT color="green">431</FONT>                    for (r = 1; r &lt; num_rows; r++)<a name="line.431"></a>
+<FONT color="green">432</FONT>                    {<a name="line.432"></a>
+<FONT color="green">433</FONT>                            factor1 = factor1.getNext();<a name="line.433"></a>
+<FONT color="green">434</FONT>    <a name="line.434"></a>
+<FONT color="green">435</FONT>                            // check if factor1's index equals its row number (except for<a name="line.435"></a>
+<FONT color="green">436</FONT>                            // the last factor that can be a repetition of a previous one)<a name="line.436"></a>
+<FONT color="green">437</FONT>                            if (r &lt; num_rows - 1 && factor1.getSerialNumber() != r)<a name="line.437"></a>
+<FONT color="green">438</FONT>                                    throw new IndexOutOfBoundsException ("Unexpected factor index.");<a name="line.438"></a>
+<FONT color="green">439</FONT>    <a name="line.439"></a>
+<FONT color="green">440</FONT>                            // go back to the root of sequence 2<a name="line.440"></a>
+<FONT color="green">441</FONT>                            factor2 = seq2.getRootFactor();<a name="line.441"></a>
+<FONT color="green">442</FONT>    <a name="line.442"></a>
+<FONT color="green">443</FONT>                            if (factor2.getSerialNumber() != 0)<a name="line.443"></a>
+<FONT color="green">444</FONT>                                    throw new IndexOutOfBoundsException ("Unexpected factor index.");<a name="line.444"></a>
+<FONT color="green">445</FONT>    <a name="line.445"></a>
+<FONT color="green">446</FONT>                            // compute first column of current row<a name="line.446"></a>
+<FONT color="green">447</FONT>                            block_table[r][0] = createFirstColumnBlock (factor1, factor2, r);<a name="line.447"></a>
+<FONT color="green">448</FONT>    <a name="line.448"></a>
+<FONT color="green">449</FONT>                            for (c = 1; c &lt; num_cols; c++)<a name="line.449"></a>
+<FONT color="green">450</FONT>                            {<a name="line.450"></a>
+<FONT color="green">451</FONT>                                    factor2 = factor2.getNext();<a name="line.451"></a>
+<FONT color="green">452</FONT>    <a name="line.452"></a>
+<FONT color="green">453</FONT>                                    // check if factor2's index equals its column number (except for<a name="line.453"></a>
+<FONT color="green">454</FONT>                                    // the last factor that can be a repetition of a previous one)<a name="line.454"></a>
+<FONT color="green">455</FONT>                                    if (c &lt; num_cols - 1 && factor2.getSerialNumber() != c)<a name="line.455"></a>
+<FONT color="green">456</FONT>                                            throw new IndexOutOfBoundsException ("Unexpected factor index.");<a name="line.456"></a>
+<FONT color="green">457</FONT>    <a name="line.457"></a>
+<FONT color="green">458</FONT>                                    // compute row r, col c<a name="line.458"></a>
+<FONT color="green">459</FONT>                                    block_table[r][c] = createBlock (factor1, factor2, r, c);<a name="line.459"></a>
+<FONT color="green">460</FONT>                            }<a name="line.460"></a>
+<FONT color="green">461</FONT>                    }<a name="line.461"></a>
+<FONT color="green">462</FONT>            }<a name="line.462"></a>
+<FONT color="green">463</FONT>    <a name="line.463"></a>
+<FONT color="green">464</FONT>            /**<a name="line.464"></a>
+<FONT color="green">465</FONT>             * Assembles the DIST matrix of a block by retrieving the DIST columns of its prefix<a name="line.465"></a>
+<FONT color="green">466</FONT>             * blocks. In fact, it also stores pointers to the owner block for each column<a name="line.466"></a>
+<FONT color="green">467</FONT>             * retrieved. These pointers are later used during the trace back procedure that<a name="line.467"></a>
+<FONT color="green">468</FONT>             * builds an optimal alignment from the information computed in the block table. This<a name="line.468"></a>
+<FONT color="green">469</FONT>             * method is general enough to suit both global and local alignment versions of the<a name="line.469"></a>
+<FONT color="green">470</FONT>             * algorithm.<a name="line.470"></a>
+<FONT color="green">471</FONT>             *<a name="line.471"></a>
+<FONT color="green">472</FONT>             * @param block the block for which the DIST matrix is needed<a name="line.472"></a>
+<FONT color="green">473</FONT>             * @param dim the dimension of the DIST matrix<a name="line.473"></a>
+<FONT color="green">474</FONT>             * @param r the row index of this block in the block table<a name="line.474"></a>
+<FONT color="green">475</FONT>             * @param c the column index of this block in the block table<a name="line.475"></a>
+<FONT color="green">476</FONT>             * @param lc the number of columns of the alignment block<a name="line.476"></a>
+<FONT color="green">477</FONT>             * @return the DIST matrix<a name="line.477"></a>
+<FONT color="green">478</FONT>             */<a name="line.478"></a>
+<FONT color="green">479</FONT>            protected int[][] assembleDistMatrix (AlignmentBlock block, int dim, int r, int c,<a name="line.479"></a>
+<FONT color="green">480</FONT>                    int lc)<a name="line.480"></a>
+<FONT color="green">481</FONT>            {<a name="line.481"></a>
+<FONT color="green">482</FONT>                    AlignmentBlock  ancestor;<a name="line.482"></a>
+<FONT color="green">483</FONT>                    Factor                  parent;<a name="line.483"></a>
+<FONT color="green">484</FONT>                    int[][]                 dist;<a name="line.484"></a>
+<FONT color="green">485</FONT>                    int                             i;<a name="line.485"></a>
+<FONT color="green">486</FONT>    <a name="line.486"></a>
+<FONT color="green">487</FONT>                    dist = new int[dim][];<a name="line.487"></a>
+<FONT color="green">488</FONT>    <a name="line.488"></a>
+<FONT color="green">489</FONT>                    // columns to the left of lc<a name="line.489"></a>
+<FONT color="green">490</FONT>                    parent = block.factor2.getAncestor();<a name="line.490"></a>
+<FONT color="green">491</FONT>                    for (i = lc - 1; i >= 0; i--)<a name="line.491"></a>
+<FONT color="green">492</FONT>                    {<a name="line.492"></a>
+<FONT color="green">493</FONT>                            ancestor = block_table[r][parent.getSerialNumber()];<a name="line.493"></a>
+<FONT color="green">494</FONT>                            block.ancestor[i] = ancestor;<a name="line.494"></a>
+<FONT color="green">495</FONT>                            dist[i] = ancestor.dist_column;<a name="line.495"></a>
+<FONT color="green">496</FONT>                            parent = parent.getAncestor();<a name="line.496"></a>
+<FONT color="green">497</FONT>                    }<a name="line.497"></a>
+<FONT color="green">498</FONT>    <a name="line.498"></a>
+<FONT color="green">499</FONT>                    // column lc<a name="line.499"></a>
+<FONT color="green">500</FONT>                    dist[lc] = block.dist_column;<a name="line.500"></a>
+<FONT color="green">501</FONT>                    block.ancestor[lc] = block;<a name="line.501"></a>
+<FONT color="green">502</FONT>    <a name="line.502"></a>
+<FONT color="green">503</FONT>                    // columns to the right of lc<a name="line.503"></a>
+<FONT color="green">504</FONT>                    parent = block.factor1.getAncestor();<a name="line.504"></a>
+<FONT color="green">505</FONT>                    for (i = lc + 1; i &lt; dim; i++)<a name="line.505"></a>
+<FONT color="green">506</FONT>                    {<a name="line.506"></a>
+<FONT color="green">507</FONT>                            ancestor = block_table[parent.getSerialNumber()][c];<a name="line.507"></a>
+<FONT color="green">508</FONT>                            block.ancestor[i] = ancestor;<a name="line.508"></a>
+<FONT color="green">509</FONT>                            dist[i] = ancestor.dist_column;<a name="line.509"></a>
+<FONT color="green">510</FONT>                            parent = parent.getAncestor();<a name="line.510"></a>
+<FONT color="green">511</FONT>                    }<a name="line.511"></a>
+<FONT color="green">512</FONT>    <a name="line.512"></a>
+<FONT color="green">513</FONT>                    return dist;<a name="line.513"></a>
+<FONT color="green">514</FONT>            }<a name="line.514"></a>
+<FONT color="green">515</FONT>    <a name="line.515"></a>
+<FONT color="green">516</FONT>            /**<a name="line.516"></a>
+<FONT color="green">517</FONT>             * Assembles the input border of a block by retrieving the values at the output<a name="line.517"></a>
+<FONT color="green">518</FONT>             * borders of the left and top blocks. This method is general enough to suit both<a name="line.518"></a>
+<FONT color="green">519</FONT>             * global and local alignment versions of the algorithm. Note that it can be used to<a name="line.519"></a>
+<FONT color="green">520</FONT>             * assemble the input border of any block but the root one (it will cause an<a name="line.520"></a>
+<FONT color="green">521</FONT>             * &lt;CODE>ArrayIndexOutOfBoundsException&lt;/CODE>.<a name="line.521"></a>
+<FONT color="green">522</FONT>             *<a name="line.522"></a>
+<FONT color="green">523</FONT>             * @param dim dimension of the input border<a name="line.523"></a>
+<FONT color="green">524</FONT>             * @param r row index of the block in the block table<a name="line.524"></a>
+<FONT color="green">525</FONT>             * @param c column index of the block in the block table<a name="line.525"></a>
+<FONT color="green">526</FONT>             * @param lr number of row of the block<a name="line.526"></a>
+<FONT color="green">527</FONT>             * @return the block's input border<a name="line.527"></a>
+<FONT color="green">528</FONT>             */<a name="line.528"></a>
+<FONT color="green">529</FONT>            protected int[] assembleInputBorder (int dim, int r, int c, int lr)<a name="line.529"></a>
+<FONT color="green">530</FONT>            {<a name="line.530"></a>
+<FONT color="green">531</FONT>                    AlignmentBlock  left = null, top = null;<a name="line.531"></a>
+<FONT color="green">532</FONT>                    int[]   input;<a name="line.532"></a>
+<FONT color="green">533</FONT>                    int             i;<a name="line.533"></a>
+<FONT color="green">534</FONT>    <a name="line.534"></a>
+<FONT color="green">535</FONT>                    input = new int [dim];<a name="line.535"></a>
+<FONT color="green">536</FONT>    <a name="line.536"></a>
+<FONT color="green">537</FONT>                    // set up pointers to the left and top blocks (if applicable)<a name="line.537"></a>
+<FONT color="green">538</FONT>                    if (c > 0) left = block_table[r][c-1];<a name="line.538"></a>
+<FONT color="green">539</FONT>                    if (r > 0) top  = block_table[r-1][c];<a name="line.539"></a>
+<FONT color="green">540</FONT>    <a name="line.540"></a>
+<FONT color="green">541</FONT>                    for (i = 0; i &lt; dim; i++)<a name="line.541"></a>
+<FONT color="green">542</FONT>                    {<a name="line.542"></a>
+<FONT color="green">543</FONT>                            if (i &lt; lr)<a name="line.543"></a>
+<FONT color="green">544</FONT>                            {<a name="line.544"></a>
+<FONT color="green">545</FONT>                                    if (left != null)<a name="line.545"></a>
+<FONT color="green">546</FONT>                                            input[i] = left.output_border[left.factor2.length() + i];<a name="line.546"></a>
+<FONT color="green">547</FONT>                                    else<a name="line.547"></a>
+<FONT color="green">548</FONT>                                            // there is no block to the left, so set a big negative value<a name="line.548"></a>
+<FONT color="green">549</FONT>                                            // to make sure it will not be used (unfortunately, MIN_VALUE<a name="line.549"></a>
+<FONT color="green">550</FONT>                                            // can overflow to a positive value when substracted by any<a name="line.550"></a>
+<FONT color="green">551</FONT>                                            // number, so we use half of it as a workaround)<a name="line.551"></a>
+<FONT color="green">552</FONT>                                            input[i] = Integer.MIN_VALUE / 2;<a name="line.552"></a>
+<FONT color="green">553</FONT>                            }<a name="line.553"></a>
+<FONT color="green">554</FONT>                            else if (i == lr)<a name="line.554"></a>
+<FONT color="green">555</FONT>                            {<a name="line.555"></a>
+<FONT color="green">556</FONT>                                    if (left != null)<a name="line.556"></a>
+<FONT color="green">557</FONT>                                            input[i] = left.output_border[left.factor2.length() + i];<a name="line.557"></a>
+<FONT color="green">558</FONT>                                    else<a name="line.558"></a>
+<FONT color="green">559</FONT>                                            // no need to check if top is not null<a name="line.559"></a>
+<FONT color="green">560</FONT>                                            // (because we assume this is not the root block)<a name="line.560"></a>
+<FONT color="green">561</FONT>                                            input[i] = top.output_border[i - lr];<a name="line.561"></a>
+<FONT color="green">562</FONT>                            }<a name="line.562"></a>
+<FONT color="green">563</FONT>                            else<a name="line.563"></a>
+<FONT color="green">564</FONT>                            {<a name="line.564"></a>
+<FONT color="green">565</FONT>                                    if (top != null)<a name="line.565"></a>
+<FONT color="green">566</FONT>                                            input[i] = top.output_border[i - lr];<a name="line.566"></a>
+<FONT color="green">567</FONT>                                    else<a name="line.567"></a>
+<FONT color="green">568</FONT>                                            // there is no top block (see note for the left case)<a name="line.568"></a>
+<FONT color="green">569</FONT>                                            input[i] = Integer.MIN_VALUE / 2;<a name="line.569"></a>
+<FONT color="green">570</FONT>                            }<a name="line.570"></a>
+<FONT color="green">571</FONT>                    }<a name="line.571"></a>
+<FONT color="green">572</FONT>    <a name="line.572"></a>
+<FONT color="green">573</FONT>                    return input;<a name="line.573"></a>
+<FONT color="green">574</FONT>            }<a name="line.574"></a>
+<FONT color="green">575</FONT>    <a name="line.575"></a>
+<FONT color="green">576</FONT>            /**<a name="line.576"></a>
+<FONT color="green">577</FONT>             * Traverses a block to retrieve a part of an optimal alignment from the specified<a name="line.577"></a>
+<FONT color="green">578</FONT>             * source in the output border to an entry in the input border.<a name="line.578"></a>
+<FONT color="green">579</FONT>             *<a name="line.579"></a>
+<FONT color="green">580</FONT>             * @param block the block to be traversed<a name="line.580"></a>
+<FONT color="green">581</FONT>             * @param source the source of the path in the output border<a name="line.581"></a>
+<FONT color="green">582</FONT>             * @param gapped_seq1 the StringBuffer to where the gapped sequence 1 is written to<a name="line.582"></a>
+<FONT color="green">583</FONT>             * @param tag_line the StringBuffer to where the tag_line is written to<a name="line.583"></a>
+<FONT color="green">584</FONT>             * @param gapped_seq2 the StringBuffer to where the gapped sequence 2 is written to<a name="line.584"></a>
+<FONT color="green">585</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.585"></a>
+<FONT color="green">586</FONT>             * with the loaded sequences.<a name="line.586"></a>
+<FONT color="green">587</FONT>             */<a name="line.587"></a>
+<FONT color="green">588</FONT>            protected void traverseBlock (AlignmentBlock block, int source,<a name="line.588"></a>
+<FONT color="green">589</FONT>                    StringBuffer gapped_seq1, StringBuffer tag_line, StringBuffer gapped_seq2)<a name="line.589"></a>
+<FONT color="green">590</FONT>                    throws IncompatibleScoringSchemeException<a name="line.590"></a>
+<FONT color="green">591</FONT>            {<a name="line.591"></a>
+<FONT color="green">592</FONT>                    char char1, char2;<a name="line.592"></a>
+<FONT color="green">593</FONT>    <a name="line.593"></a>
+<FONT color="green">594</FONT>                    while (block.direction[source] != STOP_DIRECTION)<a name="line.594"></a>
+<FONT color="green">595</FONT>                    {<a name="line.595"></a>
+<FONT color="green">596</FONT>                            char1 = block.factor1.getNewChar();<a name="line.596"></a>
+<FONT color="green">597</FONT>                            char2 = block.factor2.getNewChar();<a name="line.597"></a>
+<FONT color="green">598</FONT>    <a name="line.598"></a>
+<FONT color="green">599</FONT>                            switch (block.direction[source])<a name="line.599"></a>
+<FONT color="green">600</FONT>                            {<a name="line.600"></a>
+<FONT color="green">601</FONT>                                    case LEFT_DIRECTION:<a name="line.601"></a>
+<FONT color="green">602</FONT>                                            gapped_seq1.insert (0, GAP_CHARACTER);<a name="line.602"></a>
+<FONT color="green">603</FONT>                                            tag_line.insert (0, GAP_TAG);<a name="line.603"></a>
+<FONT color="green">604</FONT>                                            gapped_seq2.insert (0, char2);<a name="line.604"></a>
+<FONT color="green">605</FONT>    <a name="line.605"></a>
+<FONT color="green">606</FONT>                                            block = getLeftPrefix (block);<a name="line.606"></a>
+<FONT color="green">607</FONT>                                            break;<a name="line.607"></a>
+<FONT color="green">608</FONT>    <a name="line.608"></a>
+<FONT color="green">609</FONT>                                    case DIAGONAL_DIRECTION:<a name="line.609"></a>
+<FONT color="green">610</FONT>                                            gapped_seq1.insert (0, char1);<a name="line.610"></a>
+<FONT color="green">611</FONT>                                            if (char1 == char2)<a name="line.611"></a>
+<FONT color="green">612</FONT>                                                    if (useMatchTag())<a name="line.612"></a>
+<FONT color="green">613</FONT>                                                            tag_line.insert (0, MATCH_TAG);<a name="line.613"></a>
+<FONT color="green">614</FONT>                                                    else<a name="line.614"></a>
+<FONT color="green">615</FONT>                                                            tag_line.insert (0, char1);<a name="line.615"></a>
+<FONT color="green">616</FONT>                                            else if (scoreSubstitution(char1, char2) > 0)<a name="line.616"></a>
+<FONT color="green">617</FONT>                                                    tag_line.insert (0, APPROXIMATE_MATCH_TAG);<a name="line.617"></a>
+<FONT color="green">618</FONT>                                            else<a name="line.618"></a>
+<FONT color="green">619</FONT>                                                    tag_line.insert (0, MISMATCH_TAG);<a name="line.619"></a>
+<FONT color="green">620</FONT>                                            gapped_seq2.insert (0, char2);<a name="line.620"></a>
+<FONT color="green">621</FONT>    <a name="line.621"></a>
+<FONT color="green">622</FONT>                                            block = getDiagonalPrefix (block);<a name="line.622"></a>
+<FONT color="green">623</FONT>                                            source --;<a name="line.623"></a>
+<FONT color="green">624</FONT>                                            break;<a name="line.624"></a>
+<FONT color="green">625</FONT>    <a name="line.625"></a>
+<FONT color="green">626</FONT>                                    case TOP_DIRECTION:<a name="line.626"></a>
+<FONT color="green">627</FONT>                                            gapped_seq1.insert (0, char1);<a name="line.627"></a>
+<FONT color="green">628</FONT>                                            tag_line.insert (0, GAP_TAG);<a name="line.628"></a>
+<FONT color="green">629</FONT>                                            gapped_seq2.insert (0, GAP_CHARACTER);<a name="line.629"></a>
+<FONT color="green">630</FONT>    <a name="line.630"></a>
+<FONT color="green">631</FONT>                                            block = getTopPrefix (block);<a name="line.631"></a>
+<FONT color="green">632</FONT>                                            source --;<a name="line.632"></a>
+<FONT color="green">633</FONT>                                            break;<a name="line.633"></a>
+<FONT color="green">634</FONT>                            }<a name="line.634"></a>
+<FONT color="green">635</FONT>                    }<a name="line.635"></a>
+<FONT color="green">636</FONT>            }<a name="line.636"></a>
+<FONT color="green">637</FONT>    <a name="line.637"></a>
+<FONT color="green">638</FONT>            /**<a name="line.638"></a>
+<FONT color="green">639</FONT>             * This method is a shorthand to retrieve the left prefix of a block from the block<a name="line.639"></a>
+<FONT color="green">640</FONT>             * table.<a name="line.640"></a>
+<FONT color="green">641</FONT>             *<a name="line.641"></a>
+<FONT color="green">642</FONT>             * @param block the block<a name="line.642"></a>
+<FONT color="green">643</FONT>             * @return the block's left prefix<a name="line.643"></a>
+<FONT color="green">644</FONT>             */<a name="line.644"></a>
+<FONT color="green">645</FONT>            protected AlignmentBlock getLeftPrefix (AlignmentBlock block)<a name="line.645"></a>
+<FONT color="green">646</FONT>            {<a name="line.646"></a>
+<FONT color="green">647</FONT>                    int prefix_row = block.factor1.getSerialNumber();<a name="line.647"></a>
+<FONT color="green">648</FONT>                    int prefix_col = block.factor2.getAncestorSerialNumber();<a name="line.648"></a>
+<FONT color="green">649</FONT>    <a name="line.649"></a>
+<FONT color="green">650</FONT>                    return block_table[prefix_row][prefix_col];<a name="line.650"></a>
+<FONT color="green">651</FONT>            }<a name="line.651"></a>
+<FONT color="green">652</FONT>    <a name="line.652"></a>
+<FONT color="green">653</FONT>            /**<a name="line.653"></a>
+<FONT color="green">654</FONT>             * This method is a shorthand to retrieve the diagonal prefix of a block from the<a name="line.654"></a>
+<FONT color="green">655</FONT>             * block table.<a name="line.655"></a>
+<FONT color="green">656</FONT>             *<a name="line.656"></a>
+<FONT color="green">657</FONT>             * @param block the block<a name="line.657"></a>
+<FONT color="green">658</FONT>             * @return the block's diagonal prefix<a name="line.658"></a>
+<FONT color="green">659</FONT>             */<a name="line.659"></a>
+<FONT color="green">660</FONT>            protected AlignmentBlock getDiagonalPrefix (AlignmentBlock block)<a name="line.660"></a>
+<FONT color="green">661</FONT>            {<a name="line.661"></a>
+<FONT color="green">662</FONT>                    int prefix_row = block.factor1.getAncestorSerialNumber();<a name="line.662"></a>
+<FONT color="green">663</FONT>                    int prefix_col = block.factor2.getAncestorSerialNumber();<a name="line.663"></a>
+<FONT color="green">664</FONT>    <a name="line.664"></a>
+<FONT color="green">665</FONT>                    return block_table[prefix_row][prefix_col];<a name="line.665"></a>
+<FONT color="green">666</FONT>            }<a name="line.666"></a>
+<FONT color="green">667</FONT>    <a name="line.667"></a>
+<FONT color="green">668</FONT>            /**<a name="line.668"></a>
+<FONT color="green">669</FONT>             * This method is a shorthand to retrieve the top prefix of a block from the block<a name="line.669"></a>
+<FONT color="green">670</FONT>             * table.<a name="line.670"></a>
+<FONT color="green">671</FONT>             *<a name="line.671"></a>
+<FONT color="green">672</FONT>             * @param block the block<a name="line.672"></a>
+<FONT color="green">673</FONT>             * @return the block's top prefix<a name="line.673"></a>
+<FONT color="green">674</FONT>             */<a name="line.674"></a>
+<FONT color="green">675</FONT>            protected AlignmentBlock getTopPrefix (AlignmentBlock block)<a name="line.675"></a>
+<FONT color="green">676</FONT>            {<a name="line.676"></a>
+<FONT color="green">677</FONT>                    int prefix_row = block.factor1.getAncestorSerialNumber();<a name="line.677"></a>
+<FONT color="green">678</FONT>                    int prefix_col = block.factor2.getSerialNumber();<a name="line.678"></a>
+<FONT color="green">679</FONT>    <a name="line.679"></a>
+<FONT color="green">680</FONT>                    return block_table[prefix_row][prefix_col];<a name="line.680"></a>
+<FONT color="green">681</FONT>            }<a name="line.681"></a>
+<FONT color="green">682</FONT>    <a name="line.682"></a>
+<FONT color="green">683</FONT>            /**<a name="line.683"></a>
+<FONT color="green">684</FONT>             * Computes the root block of the block table. See subclasses for actual<a name="line.684"></a>
+<FONT color="green">685</FONT>             * implementation.<a name="line.685"></a>
+<FONT color="green">686</FONT>             *<a name="line.686"></a>
+<FONT color="green">687</FONT>             * @param factor1 the factor of the first sequence being aligned<a name="line.687"></a>
+<FONT color="green">688</FONT>             * @param factor2 the factor of the second sequence being aligned<a name="line.688"></a>
+<FONT color="green">689</FONT>             * @return the root block<a name="line.689"></a>
+<FONT color="green">690</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.690"></a>
+<FONT color="green">691</FONT>             * with the loaded sequences.<a name="line.691"></a>
+<FONT color="green">692</FONT>             */<a name="line.692"></a>
+<FONT color="green">693</FONT>            protected abstract AlignmentBlock createRootBlock (Factor factor1, Factor factor2)<a name="line.693"></a>
+<FONT color="green">694</FONT>                    throws IncompatibleScoringSchemeException;<a name="line.694"></a>
+<FONT color="green">695</FONT>    <a name="line.695"></a>
+<FONT color="green">696</FONT>            /**<a name="line.696"></a>
+<FONT color="green">697</FONT>             * Computes a block at the first row (row zero) of the block table, which corresponds<a name="line.697"></a>
+<FONT color="green">698</FONT>             * to an alignment block between one factor of sequence 2 and an empty string. See<a name="line.698"></a>
+<FONT color="green">699</FONT>             * subclasses for actual implementation.<a name="line.699"></a>
+<FONT color="green">700</FONT>             *<a name="line.700"></a>
+<FONT color="green">701</FONT>             * @param factor1 the factor of the first sequence being aligned<a name="line.701"></a>
+<FONT color="green">702</FONT>             * @param factor2 the factor of the second sequence being aligned<a name="line.702"></a>
+<FONT color="green">703</FONT>             * @param col the column index of block in the block table<a name="line.703"></a>
+<FONT color="green">704</FONT>             * @return the computed block<a name="line.704"></a>
+<FONT color="green">705</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.705"></a>
+<FONT color="green">706</FONT>             * with the loaded sequences.<a name="line.706"></a>
+<FONT color="green">707</FONT>             */<a name="line.707"></a>
+<FONT color="green">708</FONT>            protected abstract AlignmentBlock createFirstRowBlock (Factor factor1, Factor factor2,<a name="line.708"></a>
+<FONT color="green">709</FONT>                    int col) throws IncompatibleScoringSchemeException;<a name="line.709"></a>
+<FONT color="green">710</FONT>    <a name="line.710"></a>
+<FONT color="green">711</FONT>            /**<a name="line.711"></a>
+<FONT color="green">712</FONT>             * Computes a block at the first column (column zero) of the block table, which<a name="line.712"></a>
+<FONT color="green">713</FONT>             * corresponds to an alignment block between one factor of sequence 1 and an empty<a name="line.713"></a>
+<FONT color="green">714</FONT>             * string. See subclasses for actual implementation.<a name="line.714"></a>
+<FONT color="green">715</FONT>             *<a name="line.715"></a>
+<FONT color="green">716</FONT>             * @param factor1 the factor of the first sequence being aligned<a name="line.716"></a>
+<FONT color="green">717</FONT>             * @param factor2 the factor of the second sequence being aligned<a name="line.717"></a>
+<FONT color="green">718</FONT>             * @param row the row index of block in the block table<a name="line.718"></a>
+<FONT color="green">719</FONT>             * @return the computed block<a name="line.719"></a>
+<FONT color="green">720</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.720"></a>
+<FONT color="green">721</FONT>             * with the loaded sequences.<a name="line.721"></a>
+<FONT color="green">722</FONT>             */<a name="line.722"></a>
+<FONT color="green">723</FONT>            protected abstract AlignmentBlock createFirstColumnBlock (Factor factor1,<a name="line.723"></a>
+<FONT color="green">724</FONT>                    Factor factor2, int row) throws IncompatibleScoringSchemeException;<a name="line.724"></a>
+<FONT color="green">725</FONT>    <a name="line.725"></a>
+<FONT color="green">726</FONT>            /**<a name="line.726"></a>
+<FONT color="green">727</FONT>             * Computes a block of the block table, which corresponds to an alignment block<a name="line.727"></a>
+<FONT color="green">728</FONT>             * between one factor of sequence 1 and one factor of sequence 2. See subclasses for<a name="line.728"></a>
+<FONT color="green">729</FONT>             * actual implementation.<a name="line.729"></a>
+<FONT color="green">730</FONT>             *<a name="line.730"></a>
+<FONT color="green">731</FONT>             * @param factor1 the factor of the first sequence being aligned<a name="line.731"></a>
+<FONT color="green">732</FONT>             * @param factor2 the factor of the second sequence being aligned<a name="line.732"></a>
+<FONT color="green">733</FONT>             * @param row the row index of block in the block table<a name="line.733"></a>
+<FONT color="green">734</FONT>             * @param col the column index of block in the block table<a name="line.734"></a>
+<FONT color="green">735</FONT>             * @return the computed block<a name="line.735"></a>
+<FONT color="green">736</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.736"></a>
+<FONT color="green">737</FONT>             * with the loaded sequences.<a name="line.737"></a>
+<FONT color="green">738</FONT>             */<a name="line.738"></a>
+<FONT color="green">739</FONT>            protected abstract AlignmentBlock createBlock (Factor factor1, Factor factor2,<a name="line.739"></a>
+<FONT color="green">740</FONT>                    int row, int col) throws IncompatibleScoringSchemeException;<a name="line.740"></a>
+<FONT color="green">741</FONT>    <a name="line.741"></a>
+<FONT color="green">742</FONT>            /**<a name="line.742"></a>
+<FONT color="green">743</FONT>             * Retrieves an optimal alignment between the loaded sequences. See subclasses for<a name="line.743"></a>
+<FONT color="green">744</FONT>             * actual implementation.<a name="line.744"></a>
+<FONT color="green">745</FONT>             *<a name="line.745"></a>
+<FONT color="green">746</FONT>             * @return the computed block<a name="line.746"></a>
+<FONT color="green">747</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.747"></a>
+<FONT color="green">748</FONT>             * with the loaded sequences.<a name="line.748"></a>
+<FONT color="green">749</FONT>             */<a name="line.749"></a>
+<FONT color="green">750</FONT>            protected abstract PairwiseAlignment buildOptimalAlignment ()<a name="line.750"></a>
+<FONT color="green">751</FONT>                    throws IncompatibleScoringSchemeException;<a name="line.751"></a>
+<FONT color="green">752</FONT>    <a name="line.752"></a>
+<FONT color="green">753</FONT>            /**<a name="line.753"></a>
+<FONT color="green">754</FONT>             * Locates the score of the highest scoring alignment between the two sequences in the<a name="line.754"></a>
+<FONT color="green">755</FONT>             * block table after is thas been computed. See subclasses for actual implementation.<a name="line.755"></a>
+<FONT color="green">756</FONT>             *<a name="line.756"></a>
+<FONT color="green">757</FONT>             * @return the score of the highest scoring alignment between the loaded sequences<a name="line.757"></a>
+<FONT color="green">758</FONT>             * @throws IncompatibleScoringSchemeException If the scoring scheme is not compatible<a name="line.758"></a>
+<FONT color="green">759</FONT>             * with the loaded sequences.<a name="line.759"></a>
+<FONT color="green">760</FONT>             */<a name="line.760"></a>
+<FONT color="green">761</FONT>            protected abstract int locateScore ();<a name="line.761"></a>
+<FONT color="green">762</FONT>    }<a name="line.762"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>
