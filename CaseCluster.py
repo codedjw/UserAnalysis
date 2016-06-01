@@ -60,7 +60,7 @@ for i in xrange(nrow):
         pairwise_dist.append(round(case_dist_matrix[i][j],2))
 linkage_matrix = linkage(pairwise_dist, method='average')
 plt.figure(figsize=(20,10))
-max_d = 0.901
+max_d = 1.19
 fancy_dendrogram(
     linkage_matrix,
     truncate_mode='lastp',
@@ -72,7 +72,11 @@ fancy_dendrogram(
     max_d=max_d,
 )
 plt.savefig(cur_file_dir+'/'+'case_dendrogram.png')
-plt.show()
+#plt.show()
+plt.cla()
+plt.clf()
+plt.close()
+
 # last = linkage_matrix[-10:, 2]
 # last_rev = last[::-1]
 # idxs = np.arange(1, len(last) + 1)
@@ -90,8 +94,8 @@ plt.show()
 # cr = 'distance'
 # # k = 60
 # # cr = 'maxclust'
-max_d = 0.901
+max_d = 1.19
 cr = 'distance'
 clusters = hcluster.fcluster(linkage_matrix, max_d, criterion=cr) # fcluster取得 <= max_d (dendrogram不太准确，取得是<max_d)
 # print np.sort(clusters)
-np.savetxt(cur_file_dir+'/'+'case_cluster.txt',clusters.reshape(nrow,1))
+np.savetxt(cur_file_dir+'/'+'case_cluster.txt',clusters.reshape(nrow,1), fmt='%d')
