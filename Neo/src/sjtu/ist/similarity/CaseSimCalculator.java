@@ -67,7 +67,8 @@ public class CaseSimCalculator {
 						try {
 							algorithm.loadSequences(left, right);
 							//设置三个参数，我也不知道是什么参数，就用默认值了
-							algorithm.setScoringScheme(new BasicScoringScheme (1, -1, -1));
+//							algorithm.setScoringScheme(new BasicScoringScheme (1, -1, -1));
+							algorithm.setScoringScheme(new BasicScoringScheme (1, -1, 0));
 							//计算两个序列
 							PairwiseAlignment alignment = algorithm.getPairwiseAlignment();
 							//显示Sample CaseID
