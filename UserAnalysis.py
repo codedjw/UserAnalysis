@@ -29,6 +29,7 @@ cur_file_dir = cur_file_dir()
 X = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user_dim.txt')
 # Open database connection
 conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='qyw', charset='utf8')
+c = ['yellowgreen', 'lightskyblue', 'lightcoral', 'gold', 'red']
 
 ## t-SNE算法降维+DBSCAN聚类（效果最好）
 # ###############################################################################
@@ -64,7 +65,8 @@ print labels
 print n_clusters_
 print len(labels[labels>=0])
 
-plt.scatter(reduced_data[:, 0], reduced_data[:, 1], 20, labels) # 20为散点的直径
+colors = [c[int(i)] for i in labels]
+plt.scatter(reduced_data[:, 0], reduced_data[:, 1], 20, colors) # 20为散点的直径
 plt.savefig(cur_file_dir+'/result/'+'user_cluster_dbscan.png')
 # plt.show()
 plt.cla()
@@ -92,7 +94,6 @@ INNER JOIN
    FROM qyw_7th_user_clusters) AS t2 ON t1.USER_ID = t2.USER_ID
 ORDER BY t1.CNT_CASE DESC;
 ''', con=conn)
-c = ['y','r']
 colors = [c[int(i)] for i in np.array(USERS_CLS_CNTCASE['CLS_ID'])]
 plt.scatter(USERS_CLS_CNTCASE['CNT_CASE'], USERS_CLS_CNTCASE['USER_ID'], 20, colors) # 20为散点的直径
 plt.savefig(cur_file_dir+'/result/'+'user_cls_cntcase.png')
