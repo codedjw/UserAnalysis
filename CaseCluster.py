@@ -60,10 +60,10 @@ for i in xrange(nrow):
         pairwise_dist.append(round(case_dist_matrix[i][j],2))
 linkage_matrix = linkage(pairwise_dist, method='average')
 plt.figure(figsize=(20,10))
-#max_d = 1.19 # 120
+#max_d = 1.19 # 120 gap = -1
 #max_d = 1.38 # 1000 gap = -1
-#max_d = 0.5 # 1000 gap = 0
-max_d = 0.5 # 120 gap = 0
+max_d = 0.5 # 1000 gap = 0
+#max_d = 0.5 # 120 gap = 0
 fancy_dendrogram(
     linkage_matrix,
     truncate_mode='lastp',

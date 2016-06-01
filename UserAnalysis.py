@@ -30,7 +30,7 @@ cur_file_dir = cur_file_dir()
 ## 读取数据（user_dim.txt）
 X = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user_dim.txt')
 
-## 归一化
+##归一化
 #nrow, _ = X.shape
 #for row in xrange(nrow):
 #    X[row] = X[row]/sum(X[row])
@@ -72,13 +72,21 @@ plt.cla()
 plt.clf()
 plt.close()
 # Compute DBSCAN
-D = distance.squareform(distance.pdist(X)) # 高维数据
-#D = distance.squareform(distance.pdist(reduced_data)) # 低维数据
-S = np.max(D) - D
-#per = 0.40 # 低维数据
-per = 2 # 高维数据
-print per*np.max(D)
-db = DBSCAN(eps=per * np.max(D), min_samples=10).fit(S)
+#D = distance.squareform(distance.pdist(X)) # 高维数据
+D = distance.squareform(distance.pdist(reduced_data)) # 低维数据
+D = np.sort(D,axis=0)
+minPts = 20
+nearest = D[1:(minPts+1), :]
+nearest = nearest.reshape(1, nearest.size)
+sort_nearest = np.sort(nearest)
+plt.plot(range(len(sort_nearest[0,:])), sort_nearest[0,:], linewidth=1.0, marker='x')
+#plt.axis([-2, len(sort_nearest[0,:])+1000, -2, max(sort_nearest[0,:])+2])
+plt.savefig(cur_file_dir+'/result/'+'nearest.png')
+plt.cla()
+plt.clf()
+plt.close()
+#db = DBSCAN(eps=0.90, min_samples=minPts).fit(X) # 高维数据
+db = DBSCAN(eps=5, min_samples=minPts).fit(reduced_data) # 低维数据
 labels = db.labels_
 
 # Number of clusters in labels, ignoring noise if present.
@@ -135,9 +143,10 @@ INNER JOIN
 ORDER BY t1.CNT_CASE DESC;
 ''', con=conn)
 #colors = [c[int(i) % len(c)] for i in np.array(USERS_CLS_CNTCASE['CLS_ID'])]
-colors = USERS_CLS_CNTCASE['CLS_ID']
+#colors = USERS_CLS_CNTCASE['CLS_ID']
 #plt.scatter(USERS_CLS_CNTCASE['CNT_CASE'], USERS_CLS_CNTCASE['USER_ID'], 20, colors) # 20为散点的直径
 ## 图形展示
+labels = np.array(USERS_CLS_CNTCASE['CLS_ID'])
 unique_labels = set(labels)
 colors = plt.cm.Spectral(np.linspace(0,1,len(unique_labels)))
 cntcases = np.array(USERS_CLS_CNTCASE['CNT_CASE'])
@@ -145,7 +154,7 @@ cntcases = cntcases.reshape(cntcases.size, 1)
 uids = np.array(USERS_CLS_CNTCASE['USER_ID'])
 uids = uids.reshape(uids.size, 1)
 data = np.hstack((cntcases, uids))
-plt.axis([min(cntcases)-2, max(cntcases)+2, min(uids)-1000000, max(uids)+1000000])
+plt.axis([min(cntcases)-2, max(cntcases)+2, min(uids)-1000000, max(uids)+1000000]) #hard code, +- 为x轴、y轴分割（一格）单位
 for k, col in zip(unique_labels, colors):
     if k  == -1:
         # 噪声显示为黑色

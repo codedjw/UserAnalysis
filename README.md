@@ -5,6 +5,6 @@ User Analysis based on operation logs.
 ---
 * 执行方法
 	* 运行Neo->CaseCluster.java
-	* 运行CaseAnalysis.py
+	* 运行CaseCluster.py
 	* 运行Neo->UserCluster.java
 	* 运行UserAnalysis.py
