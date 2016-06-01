@@ -100,8 +100,8 @@ public class CaseCluster {
 			}
 			
 			DoubleMatrix2D matrix = CaseSimCalculator.calculateSimilarity(sample_cases);
-			File case_sim_file = new File("/Users/dujiawei/git/UserAnalysis/case_sim.txt");
-			File case_file = new File("/Users/dujiawei/git/UserAnalysis/case.txt");
+			File case_sim_file = new File("/Users/dujiawei/git/UserAnalysis/result/case_sim.txt");
+			File case_file = new File("/Users/dujiawei/git/UserAnalysis/result/case.txt");
 			if (!case_sim_file.exists()) {
 				case_sim_file.createNewFile();
 			}

@@ -77,7 +77,7 @@ public class UserCluster {
 			}
 			
 			// 读入预处理后的sample case cluster （case.txt, case_cluster.txt，一一对应）
-			FileReader reader = new FileReader("/Users/dujiawei/git/UserAnalysis/case.txt");
+			FileReader reader = new FileReader("/Users/dujiawei/git/UserAnalysis/result/case.txt");
             BufferedReader br = new BufferedReader(reader);
             List<Case> sample_cases = new ArrayList<Case>();
             String str;
@@ -97,7 +97,7 @@ public class UserCluster {
             br.close();
             reader.close();
 
-            reader = new FileReader("/Users/dujiawei/git/UserAnalysis/case_cluster.txt");
+            reader = new FileReader("/Users/dujiawei/git/UserAnalysis/result/case_cluster.txt");
             br = new BufferedReader(reader);
             Map<Integer, Integer> case_clusters = new HashMap<Integer, Integer>();
             int i = 0;
@@ -131,8 +131,8 @@ public class UserCluster {
             }
             
             // 写入文件
-            File user_dim_file = new File("/Users/dujiawei/git/UserAnalysis/user_dim.txt");
-			File user_file = new File("/Users/dujiawei/git/UserAnalysis/user.txt");
+            File user_dim_file = new File("/Users/dujiawei/git/UserAnalysis/result/user_dim.txt");
+			File user_file = new File("/Users/dujiawei/git/UserAnalysis/result/user.txt");
 			if (!user_dim_file.exists()) {
 				user_dim_file.createNewFile();
 			}

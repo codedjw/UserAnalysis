@@ -7,6 +7,9 @@ from matplotlib import offsetbox
 from sklearn import (manifold, datasets, decomposition, ensemble,
                      discriminant_analysis, random_projection)
 from sklearn.cluster import KMeans, DBSCAN
+import pandas as pd
+# 数据库访问
+import MySQLdb, datetime
 
 import sys,os
 #获取脚本文件的当前路径
@@ -23,7 +26,9 @@ def cur_file_dir():
 cur_file_dir = cur_file_dir()
 
 ## 读取数据（user_dim.txt）
-X = np.loadtxt('/Users/dujiawei/git/UserAnalysis/user_dim.txt')
+X = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user_dim.txt')
+# Open database connection
+conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='qyw', charset='utf8')
 
 ## t-SNE算法降维+DBSCAN聚类（效果最好）
 # ###############################################################################
@@ -43,13 +48,14 @@ X = np.loadtxt('/Users/dujiawei/git/UserAnalysis/user_dim.txt')
 tsne = manifold.TSNE(n_components=2, init='pca', random_state=0)
 reduced_data = tsne.fit_transform(X)
 plt.scatter(reduced_data[:, 0], reduced_data[:, 1])
-plt.savefig(cur_file_dir+'/'+'user_dr_tsne.png')
+plt.savefig(cur_file_dir+'/result/'+'user_dr_tsne.png')
 # plt.show()
 plt.cla()
 plt.clf()
 plt.close()
 # Compute DBSCAN
-db = DBSCAN(eps=12, min_samples=10).fit(reduced_data)
+#db = DBSCAN(eps=12, min_samples=10).fit(reduced_data) # 低维数据
+db = DBSCAN(eps=4, min_samples=10).fit(X) # 高维数据
 labels = db.labels_
 
 # Number of clusters in labels, ignoring noise if present.
@@ -59,13 +65,40 @@ print n_clusters_
 print len(labels[labels>=0])
 
 plt.scatter(reduced_data[:, 0], reduced_data[:, 1], 20, labels) # 20为散点的直径
-plt.savefig(cur_file_dir+'/'+'user_cluster_dbscan.png')
+plt.savefig(cur_file_dir+'/result/'+'user_cluster_dbscan.png')
 # plt.show()
 plt.cla()
 plt.clf()
 plt.close()
 
-USERS = np.loadtxt('/Users/dujiawei/git/UserAnalysis/user.txt')
+## 展示用户聚类结果（散点图和excel表格）
+USERS = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user.txt')
 USERS_CLS =  np.hstack((USERS.reshape(USERS.size, 1),labels.reshape(labels.size,1)))
 print USERS_CLS.shape
-np.savetxt(cur_file_dir+'/'+'user_cls.txt', USERS_CLS, fmt='%d')
+np.savetxt('user_cls.txt', USERS_CLS, fmt='%d')
+USERS_CLS_DF = pd.DataFrame(USERS_CLS, columns=['USER_ID', 'CLS_ID'])
+print USERS_CLS_DF.shape
+USERS_CLS_DF.to_sql('qyw_7th_user_clusters', conn, flavor='mysql', if_exists='replace', index=False)
+USERS_CLS_CNTCASE = pd.read_sql('''
+    SELECT t1.*,
+       t2.CLS_ID
+FROM
+  (SELECT USER_ID,
+          COUNT(DISTINCT CASE_ID) AS CNT_CASE
+   FROM qyw_7th_yy_succ_all_selected
+   GROUP BY USER_ID) AS t1
+INNER JOIN
+  (SELECT *
+   FROM qyw_7th_user_clusters) AS t2 ON t1.USER_ID = t2.USER_ID
+ORDER BY t1.CNT_CASE DESC;
+''', con=conn)
+c = ['y','r']
+colors = [c[int(i)] for i in np.array(USERS_CLS_CNTCASE['CLS_ID'])]
+plt.scatter(USERS_CLS_CNTCASE['CNT_CASE'], USERS_CLS_CNTCASE['USER_ID'], 20, colors) # 20为散点的直径
+plt.savefig(cur_file_dir+'/result/'+'user_cls_cntcase.png')
+# plt.show()
+plt.cla()
+plt.clf()
+plt.close()
+USERS_CLS_CNTCASE.to_excel(cur_file_dir+'/result/'+'user_cls_cntcase.xls')
+conn.close()

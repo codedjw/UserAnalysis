@@ -47,7 +47,7 @@ def fancy_dendrogram(*args, **kwargs):
 
 ## Case Hierarchy Cluster (Step01 - Ouput: dendrogram)
 # 读入Case Similarity Matrix(小数点后两位)
-case_sim_matrix = np.loadtxt("/Users/dujiawei/git/UserAnalysis/case_sim.txt")
+case_sim_matrix = np.loadtxt("/Users/dujiawei/git/UserAnalysis/result/case_sim.txt")
 
 case_dist_matrix = 1 - case_sim_matrix
 print case_sim_matrix.mean(), case_sim_matrix.max(), case_sim_matrix.min()
@@ -71,7 +71,7 @@ fancy_dendrogram(
     annotate_above=0.1,
     max_d=max_d,
 )
-plt.savefig(cur_file_dir+'/'+'case_dendrogram.png')
+plt.savefig(cur_file_dir+'/result/'+'case_dendrogram.png')
 #plt.show()
 plt.cla()
 plt.clf()
@@ -98,4 +98,4 @@ max_d = 1.19
 cr = 'distance'
 clusters = hcluster.fcluster(linkage_matrix, max_d, criterion=cr) # fcluster取得 <= max_d (dendrogram不太准确，取得是<max_d)
 # print np.sort(clusters)
-np.savetxt(cur_file_dir+'/'+'case_cluster.txt',clusters.reshape(nrow,1), fmt='%d')
+np.savetxt(cur_file_dir+'/result/'+'case_cluster.txt',clusters.reshape(nrow,1), fmt='%d')
