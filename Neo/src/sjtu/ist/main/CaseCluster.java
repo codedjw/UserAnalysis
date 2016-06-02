@@ -36,7 +36,7 @@ public class CaseCluster {
 			long finishTime = System.currentTimeMillis();
 			System.out.println(query+" 运行时间： "+(finishTime-beginTime)/1000/60+"min, "+(finishTime-beginTime)%(1000*60)/1000+"s, "+(finishTime-beginTime)%(1000*60)%1000+"ms");
 			
-			String seqLogName = "simlarityMatrix.log";
+			String seqLogName = "similarityMatrix.log";
 			PrintStream sysout = System.out; // always console output
 			// --- BEGIN --- (redirect log output to file)
 			PrintStream printStream = null;

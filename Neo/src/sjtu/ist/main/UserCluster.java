@@ -160,7 +160,7 @@ public class UserCluster {
 			for (int j=0; j<uids.size(); j++) {
 				String row = uids.get(j);
 				bw.write(row);
-				if (j < sample_cases.size()-1) {
+				if (j < uids.size()-1) {
 					bw.newLine();
 				}
 			}

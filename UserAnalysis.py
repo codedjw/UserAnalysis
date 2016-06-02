@@ -73,10 +73,10 @@ plt.cla()
 plt.clf()
 plt.close()
 # Compute DBSCAN
-#D = distance.squareform(distance.pdist(X)) # 高维数据
-D = distance.squareform(distance.pdist(reduced_data)) # 低维数据
+D = distance.squareform(distance.pdist(X)) # 高维数据
+#D = distance.squareform(distance.pdist(reduced_data)) # 低维数据
 D = np.sort(D,axis=0)
-minPts = 10
+minPts = 20
 nearest = D[1:(minPts+1), :]
 nearest = nearest.reshape(1, nearest.size)
 sort_nearest = np.sort(nearest)
@@ -86,8 +86,8 @@ plt.savefig(cur_file_dir+'result/'+'nearest.png')
 plt.cla()
 plt.clf()
 plt.close()
-#db = DBSCAN(eps=0.90, min_samples=minPts).fit(X) # 高维数据
-db = DBSCAN(eps=30, min_samples=minPts).fit(reduced_data) # 低维数据
+#db = DBSCAN(eps=4, min_samples=minPts).fit(X) # 高维数据
+db = DBSCAN(eps=5, min_samples=minPts).fit(reduced_data) # 低维数据
 labels = db.labels_
 
 # Number of clusters in labels, ignoring noise if present.
@@ -126,7 +126,7 @@ plt.close()
 USERS = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user.txt')
 USERS_CLS =  np.hstack((USERS.reshape(USERS.size, 1),labels.reshape(labels.size,1)))
 print USERS_CLS.shape
-np.savetxt(cur_file_dir+'resltuser_cls.txt', USERS_CLS, fmt='%d')
+np.savetxt(cur_file_dir+'result/user_cls.txt', USERS_CLS, fmt='%d')
 USERS_CLS_DF = pd.DataFrame(USERS_CLS, columns=['USER_ID', 'CLS_ID'])
 print USERS_CLS_DF.shape
 USERS_CLS_DF.to_sql('qyw_7th_user_clusters', conn, flavor='mysql', if_exists='replace', index=False)
