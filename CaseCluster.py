@@ -18,7 +18,8 @@ def cur_file_dir():
          return os.path.dirname(path)
 #打印结果
 
-cur_file_dir = cur_file_dir()
+cur_file_dir = cur_file_dir() + '/'
+#cur_file_dir = ''
 
 ## 绘制dendrogram （根据linkage）
 def fancy_dendrogram(*args, **kwargs):
@@ -62,8 +63,8 @@ linkage_matrix = linkage(pairwise_dist, method='average')
 plt.figure(figsize=(20,10))
 #max_d = 1.19 # 120 gap = -1
 #max_d = 1.38 # 1000 gap = -1
-max_d = 0.5 # 1000 gap = 0
-#max_d = 0.5 # 120 gap = 0
+# max_d = 0.5 # 1000 gap = 0
+max_d = 0.5 # 120 gap = 0
 fancy_dendrogram(
     linkage_matrix,
     truncate_mode='lastp',
@@ -74,7 +75,7 @@ fancy_dendrogram(
     annotate_above=0.1,
     max_d=max_d,
 )
-plt.savefig(cur_file_dir+'/result/'+'case_dendrogram.png')
+plt.savefig(cur_file_dir+'result/'+'case_dendrogram.png')
 #plt.show()
 plt.cla()
 plt.clf()
@@ -100,4 +101,4 @@ plt.close()
 cr = 'distance'
 clusters = hcluster.fcluster(linkage_matrix, max_d, criterion=cr) # fcluster取得 <= max_d (dendrogram不太准确，取得是<max_d)
 # print np.sort(clusters)
-np.savetxt(cur_file_dir+'/result/'+'case_cluster.txt',clusters.reshape(nrow,1), fmt='%d')
+np.savetxt(cur_file_dir+'result/'+'case_cluster.txt',clusters.reshape(nrow,1), fmt='%d')

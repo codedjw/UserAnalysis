@@ -25,7 +25,8 @@ def cur_file_dir():
          return os.path.dirname(path)
 #打印结果
 
-cur_file_dir = cur_file_dir()
+cur_file_dir = cur_file_dir() + '/'
+#cur_file_dir = ''
 
 ## 读取数据（user_dim.txt）
 X = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user_dim.txt')
@@ -48,7 +49,7 @@ conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='qyw', charset=
 #tsne = manifold.TSNE(n_components=2, init='pca', random_state=0)
 #reduced_data = tsne.fit_transform(X)
 #plt.scatter(reduced_data[:, 0], reduced_data[:, 1])
-#plt.savefig(cur_file_dir+'/result/'+'user_dr_tsne.png')
+#plt.savefig(cur_file_dir+'result/'+'user_dr_tsne.png')
 ## plt.show()
 #plt.cla()
 #plt.clf()
@@ -66,7 +67,7 @@ conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='qyw', charset=
 tsne = manifold.TSNE(n_components=2, init='pca', random_state=0)
 reduced_data = tsne.fit_transform(X)
 plt.scatter(reduced_data[:, 0], reduced_data[:, 1])
-plt.savefig(cur_file_dir+'/result/'+'user_dr_tsne.png')
+plt.savefig(cur_file_dir+'result/'+'user_dr_tsne.png')
 # plt.show()
 plt.cla()
 plt.clf()
@@ -75,18 +76,18 @@ plt.close()
 #D = distance.squareform(distance.pdist(X)) # 高维数据
 D = distance.squareform(distance.pdist(reduced_data)) # 低维数据
 D = np.sort(D,axis=0)
-minPts = 20
+minPts = 10
 nearest = D[1:(minPts+1), :]
 nearest = nearest.reshape(1, nearest.size)
 sort_nearest = np.sort(nearest)
 plt.plot(range(len(sort_nearest[0,:])), sort_nearest[0,:], linewidth=1.0, marker='x')
 #plt.axis([-2, len(sort_nearest[0,:])+1000, -2, max(sort_nearest[0,:])+2])
-plt.savefig(cur_file_dir+'/result/'+'nearest.png')
+plt.savefig(cur_file_dir+'result/'+'nearest.png')
 plt.cla()
 plt.clf()
 plt.close()
 #db = DBSCAN(eps=0.90, min_samples=minPts).fit(X) # 高维数据
-db = DBSCAN(eps=5, min_samples=minPts).fit(reduced_data) # 低维数据
+db = DBSCAN(eps=30, min_samples=minPts).fit(reduced_data) # 低维数据
 labels = db.labels_
 
 # Number of clusters in labels, ignoring noise if present.
@@ -115,7 +116,7 @@ for k, col in zip(unique_labels, colors):
     plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,   
              markeredgecolor='k', markersize=markersize)   
     plt.title('Estimated number of clusters: %d' % n_clusters_)
-plt.savefig(cur_file_dir+'/result/'+'user_cluster_dbscan.png')
+plt.savefig(cur_file_dir+'result/'+'user_cluster_dbscan.png')
 # plt.show()
 plt.cla()
 plt.clf()
@@ -125,7 +126,7 @@ plt.close()
 USERS = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user.txt')
 USERS_CLS =  np.hstack((USERS.reshape(USERS.size, 1),labels.reshape(labels.size,1)))
 print USERS_CLS.shape
-np.savetxt('user_cls.txt', USERS_CLS, fmt='%d')
+np.savetxt(cur_file_dir+'resltuser_cls.txt', USERS_CLS, fmt='%d')
 USERS_CLS_DF = pd.DataFrame(USERS_CLS, columns=['USER_ID', 'CLS_ID'])
 print USERS_CLS_DF.shape
 USERS_CLS_DF.to_sql('qyw_7th_user_clusters', conn, flavor='mysql', if_exists='replace', index=False)
@@ -166,10 +167,168 @@ for k, col in zip(unique_labels, colors):
     xy = data[class_member_mask]
     plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,   
              markeredgecolor='k', markersize=markersize) 
-plt.savefig(cur_file_dir+'/result/'+'user_cls_cntcase.png')
+plt.savefig(cur_file_dir+'result/'+'user_cls_cntcase.png')
 # plt.show()
 plt.cla()
 plt.clf()
 plt.close()
-USERS_CLS_CNTCASE.to_excel(cur_file_dir+'/result/'+'user_cls_cntcase.xls')
+USERS_CLS_CNTCASE.to_excel(cur_file_dir+'result/'+'user_cls_cntcase.xls')
+
+## 年龄分布(optional)
+#AGE_ALL = pd.read_sql('''
+#SELECT AGE FROM qyw_7th_user;
+#''',con=conn)
+#AGE_ALL = AGE_ALL.AGE
+#AGE_ALL = AGE_ALL.fillna(-1)
+#AGE_ALL = AGE_ALL.sort_values()
+#plt.scatter(range(AGE_ALL.size),AGE_ALL)
+#plt.show()
+
+## 特征提取（分类）
+USER_INFO_CLS = pd.read_sql('''
+SELECT t1.GENDER,
+       t1.MEDICAL_GUIDE AS USER_TYPE,
+       t1.CITY,
+       t1.AGE,
+       t2.CLS_ID
+FROM
+  (SELECT *
+   FROM qyw_7th_user
+   ORDER BY USER_ID) AS t1
+INNER JOIN
+  (SELECT *
+   FROM qyw_7th_user_clusters
+   WHERE CLS_ID >= 0
+   ORDER BY USER_ID) AS t2 ON t1.USER_ID = t2.USER_ID;''', con=conn)
+USER_INFO_CLS.loc[USER_INFO_CLS['GENDER'] == 0, 'GENDER'] = 'UNKNOWN'
+USER_INFO_CLS.loc[USER_INFO_CLS['GENDER'] == 1, 'GENDER'] = 'MALE'
+USER_INFO_CLS.loc[USER_INFO_CLS['GENDER'] == 2, 'GENDER'] = 'FEMALE'
+USER_INFO_CLS.loc[USER_INFO_CLS['USER_TYPE'] != '', 'USER_TYPE'] = 'MEDICAL_GUIDED'
+USER_INFO_CLS.loc[USER_INFO_CLS['USER_TYPE'] == '', 'USER_TYPE'] = 'SELF_GUIDED'
+USER_INFO_CLS['AGE'].fillna(-1, inplace=True)
+USER_INFO_CLS['CITY'].fillna(u'未知', inplace=True)
+USER_INFO_CLS.loc[USER_INFO_CLS['CITY'] != u'武汉', 'CITY'] = 'HOSPITAL LOCATED'
+USER_INFO_CLS.loc[USER_INFO_CLS['CITY'] == u'武汉', 'CITY'] = 'OTHERS'
+
+# 年龄离散化（optional）
+USER_INFO_CLS.AGE = USER_INFO_CLS.AGE.apply(lambda x:'{begin} TO {end}'.format(begin=int(x)/10*10,end=(int(x)/10+1)*10))
+USER_INFO_CLS.loc[USER_INFO_CLS['AGE'] == '-10 -> 0', 'AGE'] = 'UNKNOWN'
+
+# encoding
+USER_INFO_CLS_FEA = USER_INFO_CLS.drop(['CLS_ID'], axis=1)
+USER_INFO_CLS_FEA_DICT = USER_INFO_CLS_FEA.T.to_dict().values()
+
+from sklearn.feature_extraction import DictVectorizer
+vec = DictVectorizer()
+USER_INFO_CLS_DATA = vec.fit_transform(USER_INFO_CLS_FEA_DICT).toarray()
+USER_INFO_CLS_FEA_NAMES = vec.get_feature_names()
+print USER_INFO_CLS_FEA_NAMES
+USER_INFO_CLS_TARGET = USER_INFO_CLS.CLS_ID.values
+
+from sklearn import tree
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(USER_INFO_CLS_DATA, USER_INFO_CLS_TARGET)
+
+from sklearn.externals.six import StringIO 
+import pydot 
+
+# dot_data = StringIO() 
+# tree.export_graphviz(clf, out_file=dot_data) 
+# graph = pydot.graph_from_dot_data(dot_data.getvalue()) 
+# graph.write_png(cur_file_dir+"result/USER_INFO_CLS_clf_1.png") 
+
+USER_INFO_CLS_TARGET = ['cls #'+str(int(i)) for i in np.unique(USER_INFO_CLS_TARGET)]
+print USER_INFO_CLS_TARGET
+from IPython.display import Image  
+dot_data = StringIO()  
+tree.export_graphviz(clf, out_file=dot_data,  
+                         feature_names=USER_INFO_CLS_FEA_NAMES,  
+                         class_names=USER_INFO_CLS_TARGET,  
+                         filled=True, rounded=True,  
+                         special_characters=False)  # (default=False) When set to False, ignore special characters for PostScript compatibility.
+graph = pydot.graph_from_dot_data(dot_data.getvalue())  
+graph.write_png(cur_file_dir+"result/user_info_cls_clf.png")
+# conn.close()
+
+## 特征提取（预测）
+USER_INFO_CLS = pd.read_sql('''
+SELECT t1.GENDER,
+       t1.MEDICAL_GUIDE AS USER_TYPE,
+       t1.CITY,
+       t1.AGE,
+       t2.CLS_ID
+FROM
+  (SELECT *
+   FROM qyw_7th_user
+   ORDER BY USER_ID) AS t1
+INNER JOIN
+  (SELECT *
+   FROM qyw_7th_user_clusters
+   WHERE CLS_ID >= 0
+   ORDER BY USER_ID) AS t2 ON t1.USER_ID = t2.USER_ID;''', con=conn)
+USER_INFO_CLS.loc[USER_INFO_CLS['GENDER'] == 0, 'GENDER'] = 'UNKNOWN'
+USER_INFO_CLS.loc[USER_INFO_CLS['GENDER'] == 1, 'GENDER'] = 'MALE'
+USER_INFO_CLS.loc[USER_INFO_CLS['GENDER'] == 2, 'GENDER'] = 'FEMALE'
+USER_INFO_CLS.loc[USER_INFO_CLS['USER_TYPE'] != '', 'USER_TYPE'] = 'MEDICAL_GUIDED'
+USER_INFO_CLS.loc[USER_INFO_CLS['USER_TYPE'] == '', 'USER_TYPE'] = 'SELF_GUIDED'
+USER_INFO_CLS['AGE'].fillna(-1, inplace=True)
+USER_INFO_CLS['CITY'].fillna(u'未知', inplace=True)
+USER_INFO_CLS.loc[USER_INFO_CLS['CITY'] != u'武汉', 'CITY'] = 'HOSPITAL LOCATED'
+USER_INFO_CLS.loc[USER_INFO_CLS['CITY'] == u'武汉', 'CITY'] = 'OTHERS'
+
+# # 年龄离散化（optional）
+# USER_INFO_CLS.AGE = USER_INFO_CLS.AGE.apply(lambda x:'{begin} TO {end}'.format(begin=int(x)/10*10,end=(int(x)/10+1)*10))
+# USER_INFO_CLS.loc[USER_INFO_CLS['AGE'] == '-10 -> 0', 'AGE'] = 'UNKNOWN'
+
+# encoding
+USER_INFO_CLS_FEA = USER_INFO_CLS.drop(['CLS_ID'], axis=1)
+USER_INFO_CLS_FEA_DICT = USER_INFO_CLS_FEA.T.to_dict().values()
+
+from sklearn.feature_extraction import DictVectorizer
+vec = DictVectorizer()
+USER_INFO_CLS_DATA = vec.fit_transform(USER_INFO_CLS_FEA_DICT).toarray()
+USER_INFO_CLS_FEA_NAMES = vec.get_feature_names()
+# print USER_INFO_CLS_FEA_NAMES
+USER_INFO_CLS_TARGET = USER_INFO_CLS.CLS_ID.values
+
+# 将数据集分为训练集和测试集
+from sklearn.cross_validation import train_test_split
+data_train, data_test, target_train, target_test = train_test_split(USER_INFO_CLS_DATA, USER_INFO_CLS_TARGET)
+print len(data_train), len(data_test)
+
+# 这里选择朴素贝叶斯、决策树、随机森林和SVM来做一个对比。
+from sklearn import cross_validation
+from sklearn.naive_bayes import GaussianNB
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
+import datetime
+estimators = {}
+estimators['bayes'] = GaussianNB()
+estimators['tree'] = tree.DecisionTreeClassifier()
+estimators['forest_100'] = RandomForestClassifier(n_estimators = 100)
+estimators['forest_10'] = RandomForestClassifier(n_estimators = 10)
+estimators['svm_c_rbf'] = svm.SVC()
+estimators['svm_c_linear'] = svm.SVC(kernel='linear')
+estimators['svm_linear'] = svm.LinearSVC()
+# estimators['svm_nusvc'] = svm.NuSVC() # error, because: http://stackoverflow.com/questions/26987248/nu-is-infeasible
+
+for k in estimators.keys():
+    start_time = datetime.datetime.now()
+    print '----%s----' % k
+    estimators[k] = estimators[k].fit(data_train, target_train)
+    pred = estimators[k].predict(data_test)
+    # print target_test vs. pred
+#     print target_test
+#     print 'vs. '
+#     print pred
+    # This is predict score
+    print("%s Score: %0.2f" % (k, estimators[k].score(data_test, target_test)))
+    scores = cross_validation.cross_val_score(estimators[k], data_test, target_test, cv=5)
+    print("%s Cross Avg. Score: %0.2f (+/- %0.2f)" % (k, scores.mean(), scores.std() * 2))
+#     print("%s Pred Score: %0.2f" % (k, ((float)(len(target_test[target_test == pred])))/len(target_test)))
+    end_time = datetime.datetime.now()
+    time_spend = end_time - start_time
+    print("%s Time: %0.2f" % (k, time_spend.total_seconds()))
+    
 conn.close()
