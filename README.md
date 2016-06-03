@@ -13,21 +13,23 @@ User Analysis based on operation logs.
 
 文件名| 生成文件 | 描述
 -----|--------|----
-CaseCluster.java|<b>case.txt|Unique Case List<br>大小：size(Unique Case)<br>内容：（CaseID（从0开始）\tList<Event.activity>（以空格分隔））
+CaseCluster.java|<font color=green><b>case.txt|Unique Case List<br>大小：size(Unique Case)<br>内容：（CaseID（从0开始）\tList<Event.activity>（以空格分隔））
 CaseCluster.java|<b>case_sim.txt|Unique Case Similarity Matrix based on [Needleman Algorithm](https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm) <br>大小：size(Unique Case) * size(Unique Case)）
-CaseCluster.py|<b>case_dendrogram.png|Unique Case Cluster based on Scipy Hierarchy Cluster Algorithm<br>显示：系统树图（max_d）
-CaseCluster.py|<b>case_cluster.txt|Unique Case Cluster ID<br>大小：size(Unique Case)<br>顺序：与case.txt和case_sim.txt一致
-UserCluster.java|<b>user_dim.txt|基于case.txt和case_cluster.txt，对每个用户的所有Case根据聚类结果进行一个频次打分，形成一个打分矩阵<br>大小：size(Unique User ID) * size(Unique Case Cluster ID)）
-UserCluster.java|<b>user.txt|Unique User ID<br>大小：size(Unique User ID)<br>顺序：与user_dim.txt一致
+CaseCluster.py|<font color=red><b>case_dendrogram.png|Unique Case Cluster based on Scipy Hierarchy Cluster Algorithm<br>显示：系统树图（max_d）
+CaseCluster.py|<font color=green><b>case_cluster.txt|Unique Case Cluster ID<br>大小：size(Unique Case)<br>顺序：与case.txt和case_sim.txt一致
+UserCluster.java|<font color=green><b>user_dim.txt|基于case.txt和case_cluster.txt，对每个用户的所有Case根据聚类结果进行一个频次打分，形成一个打分矩阵<br>大小：size(Unique User ID) * size(Unique Case Cluster ID)）
+UserCluster.java|<font color=blue><b>user.txt|Unique User ID<br>大小：size(Unique User ID)<br>顺序：与user_dim.txt一致
 UserAnalysis.py|<b>user_dr_tsne.png|sklearn tSNE算法对user_dim.txt降维后结果<br>显示：二维散点图（基于降维后数据）
-UserAnalysis.py|<b>nearest.png|<b>对高维或低维数据通过k-nearest距离计算，绘制的k领域距离变化图，用于确定DBSCAN中的eps
-UserAnalysis.py|<b>cls_special_user_dim.txt|DBSCAN对高维或低维数据形成的簇，每个簇随机选择一个样本（User），用该User的Case簇打分值表示整个簇的行为特性（打分值由user_dim.txt获得）<br><b>可参考case_cluster.txt(CaseID(offset-1), CCID)、case.txt(CaseID, caseContent)以及user_dim.txt(score(CCID))join得到）
-UserAnalysis.py|<b>user_cluster.dbscan.png|对高维或低维数据通过DBSCAN聚类后的结果<br>显示：二维散点图（基于降维后数据）<br><b>颜色：DBSCAN聚类后的簇标号（可以观察tSNE算法对全局特性保持的效果）
-UserAnalysis.py|<b>user_cls.txt|对高维或低维数据通过DBSCAN聚类后的结果，每个用户对应的簇标号<br>大小：size(Unique User) * 2
+UserAnalysis.py|<font color=blue><b>nearest.png|<b>对高维或低维数据通过k-nearest距离计算，绘制的k领域距离变化图，用于确定DBSCAN中的eps
+UserAnalysis.py|<font color=red><b>cls_special_user_dim.txt|DBSCAN对高维或低维数据形成的簇，每个簇随机选择一个样本（User），用该User的Case簇打分值表示整个簇的行为特性（打分值由user_dim.txt获得）<br><b>可参考<font color=green>case_cluster.txt</font>(CaseID(offset-1), CCID)、<font color=green>case.txt</font>(CaseID, caseContent)以及<font color=green>user_dim.txt</font>(score(CCID))join得到）
+UserAnalysis.py|<font color=red><b>user_cluster_dbscan.png|对高维或低维数据通过DBSCAN聚类后的结果<br>显示：二维散点图（基于降维后数据）<br><b>颜色：DBSCAN聚类后的簇标号（可以观察tSNE算法对全局特性保持的效果）
+UserAnalysis.py|<font color=blue><b>user_cls.txt|对高维或低维数据通过DBSCAN聚类后的结果，每个用户对应的簇标号<br>大小：size(Unique User) * 2
 UserAnalysis.py|<b>user_cls_cntcase.png|USER_ID、UCID、count(Case)间的关系<br>显示：散点图
 UserAnalysis.py|<b>user_cls_cntcase.xls|USER_ID、UCID、count(Case)间的关系<br>显示：Excel表格
-UserAnalysis.py|<b>user_info_cls_rules.xls|<b>将USER的属性和UCID结果，通过sklearn DescionTreeClassifier分类后生成的规则（分类树叶子节点产生的条件）
-UserAnalysis.py|<b>user_info_cls_clf.png|<b>将USER的属性和UCID结果，通过sklearn DescionTreeClassifier分类后生成的决策树<br>显示：决策树
+UserAnalysis.py|<font color=red><b>user_info_cls_rules.txt|<b>将USER的属性和UCID结果，通过sklearn DescionTreeClassifier分类后生成的规则（分类树叶子节点产生的条件）
+UserAnalysis.py|<font color=red><b>user_info_cls_clf.png|<b>将USER的属性和UCID结果，通过sklearn DescionTreeClassifier分类后生成的决策树<br>显示：决策树
+
+* 其中<font color=blue><b>蓝色</font>为重要中间结果，<font color=red><b>红色</font>为最终结果，<font color=green><b>绿色</font>为可参考计算的结果
 
 实验数据
 ---
