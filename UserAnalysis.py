@@ -1,5 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+
+# coding: utf-8
+
+# In[177]:
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,34 +14,50 @@ from scipy.spatial import distance
 import pandas as pd
 # 数据库访问
 import MySQLdb, datetime
+import random
+
+
+# ## 获取当前路径
+
+# In[6]:
 
 import sys,os
 #获取脚本文件的当前路径
 def cur_file_dir():
-     #获取脚本路径
-     path = sys.path[0]
-     #判断为脚本文件还是py2exe编译后的文件，如果是脚本文件，则返回的是脚本的目录，如果是py2exe编译后的文件，则返回的是编译后的文件路径
-     if os.path.isdir(path):
-         return path
-     elif os.path.isfile(path):
-         return os.path.dirname(path)
+    #获取脚本路径
+    path = sys.path[0]
+    #判断为脚本文件还是py2exe编译后的文件，如果是脚本文件，则返回的是脚本的目录，如果是py2exe编译后的文件，则返回的是编译后的文件路径
+    if os.path.isdir(path):
+        return path
+    elif os.path.isfile(path):
+        return os.path.dirname(path)
 #打印结果
 
 cur_file_dir = cur_file_dir() + '/'
-#cur_file_dir = ''
+# cur_file_dir = ''
+
+
+# ## 读取数据（user_dim.txt）
+
+# In[175]:
 
 ## 读取数据（user_dim.txt）
 X = np.loadtxt('/Users/dujiawei/git/UserAnalysis/result/user_dim.txt')
 
 ##归一化
-#nrow, _ = X.shape
-#for row in xrange(nrow):
-#    X[row] = X[row]/sum(X[row])
-#X = np.vectorize(lambda x: round(x,2))(X)
+# nrow, _ = X.shape
+# for row in xrange(nrow):
+#     X[row] = X[row]/sum(X[row])
+# X = np.vectorize(lambda x: round(x,2))(X)
 
 # Open database connection
 conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='qyw', charset='utf8')
 #c = ['yellowgreen', 'lightskyblue', 'lightcoral', 'gold', 'blue']
+
+
+# ## t-SNE算法降维+DBSCAN聚类（效果最好）
+
+# In[189]:
 
 ## t-SNE算法降维+DBSCAN聚类（效果最好）
 # ###############################################################################
@@ -73,10 +91,10 @@ plt.cla()
 plt.clf()
 plt.close()
 # Compute DBSCAN
-D = distance.squareform(distance.pdist(X)) # 高维数据
-#D = distance.squareform(distance.pdist(reduced_data)) # 低维数据
+#D = distance.squareform(distance.pdist(X)) # 高维数据
+D = distance.squareform(distance.pdist(reduced_data)) # 低维数据
 D = np.sort(D,axis=0)
-minPts = 20
+minPts = 10
 nearest = D[1:(minPts+1), :]
 nearest = nearest.reshape(1, nearest.size)
 sort_nearest = np.sort(nearest)
@@ -86,8 +104,8 @@ plt.savefig(cur_file_dir+'result/'+'nearest.png')
 plt.cla()
 plt.clf()
 plt.close()
-#db = DBSCAN(eps=4, min_samples=minPts).fit(X) # 高维数据
-db = DBSCAN(eps=5, min_samples=minPts).fit(reduced_data) # 低维数据
+#db = DBSCAN(eps=0.90, min_samples=minPts).fit(X) # 高维数据
+db = DBSCAN(eps=30, min_samples=minPts).fit(reduced_data) # 低维数据
 labels = db.labels_
 
 # Number of clusters in labels, ignoring noise if present.
@@ -104,6 +122,7 @@ print len(labels[labels>=0])
 ## 图形展示
 unique_labels = set(labels)
 colors = plt.cm.Spectral(np.linspace(0,1,len(unique_labels)))
+f = open(cur_file_dir+'result/cls_special_user_dim.txt', 'w')
 for k, col in zip(unique_labels, colors):
     if k  == -1:
         # 噪声显示为黑色
@@ -113,9 +132,14 @@ for k, col in zip(unique_labels, colors):
         markersize = 8
     class_member_mask = (labels == k)
     xy = reduced_data[class_member_mask]
+    if k >= 0: # 非离群点
+    	xxy = X[class_member_mask]
+    	nrow,ncol = xxy.shape
+    	np.savetxt(f, xxy[random.randint(0, nrow-1),:].reshape(1,ncol),fmt='%d')
     plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,   
              markeredgecolor='k', markersize=markersize)   
     plt.title('Estimated number of clusters: %d' % n_clusters_)
+f.close()
 plt.savefig(cur_file_dir+'result/'+'user_cluster_dbscan.png')
 # plt.show()
 plt.cla()
@@ -174,17 +198,100 @@ plt.clf()
 plt.close()
 USERS_CLS_CNTCASE.to_excel(cur_file_dir+'result/'+'user_cls_cntcase.xls')
 
-## 年龄分布(optional)
-#AGE_ALL = pd.read_sql('''
-#SELECT AGE FROM qyw_7th_user;
-#''',con=conn)
-#AGE_ALL = AGE_ALL.AGE
-#AGE_ALL = AGE_ALL.fillna(-1)
-#AGE_ALL = AGE_ALL.sort_values()
-#plt.scatter(range(AGE_ALL.size),AGE_ALL)
-#plt.show()
 
-## 特征提取（分类）
+# # ## 年龄分布（年龄映射为标称属性）optional
+
+# # In[17]:
+
+# AGE_ALL = pd.read_sql('''
+# SELECT AGE FROM qyw_7th_user;
+# ''',con=conn)
+# AGE_ALL = AGE_ALL.AGE
+# AGE_ALL = AGE_ALL.fillna(-1)
+# AGE_ALL = AGE_ALL.sort_values()
+# plt.scatter(range(AGE_ALL.size),AGE_ALL)
+# plt.show()
+
+
+# ## 打印分类树规则
+
+# In[163]:
+
+def get_lineage(tree, feature_names, class_names, numerial_feature_names=None):
+    left= tree.tree_.children_left
+    right= tree.tree_.children_right
+    threshold = tree.tree_.threshold
+    features  = [feature_names[i] for i in tree.tree_.feature]
+    values = tree.tree_.value
+
+    # get ids of child nodes
+    idx = np.argwhere(left == -1)[:,0]     
+
+    def recurse(left, right, child, lineage=None):          
+        if lineage is None:
+            lineage = [child]
+        if child in left:
+            parent = np.where(left == child)[0].item()
+            split = 'l'
+        else:
+            parent = np.where(right == child)[0].item()
+            split = 'r'
+
+        lineage.append((parent, split, threshold[parent], features[parent]))
+
+        if parent == 0:
+            lineage.reverse()
+            return lineage
+        else:
+            return recurse(left, right, parent, lineage)
+    f = open(cur_file_dir+'result/user_info_cls_rules.txt','w')
+    i = 0
+    for child in idx:
+        str = ''
+        for node in recurse(left, right, child):
+            if isinstance(node, tuple):
+                _,cur_split,cur_threshold,cur_feature = node
+                feature_label = cur_feature
+                if numerial_feature_names:
+                    if cur_feature in numerial_feature_names:
+                        comp_label = '<='
+                        if cur_split == 'r':
+                            comp_label = '>'
+                        feature_label = '{lnum}{comp}{thr}'.format(lnum=feature_label, comp=comp_label, thr=cur_threshold)
+                and_label = ''
+                if str != '':
+                    and_label = ' AND '
+                not_label = ''
+                if cur_split == 'l':
+                    not_label = 'NOT '
+                    if numerial_feature_names:
+                        if cur_feature in numerial_feature_names:
+                            not_label = ''
+                str = '{origin}{land}({lnot}{lnew})'.format(origin=str, land=and_label, lnot=not_label, lnew=feature_label)
+            else:
+                value = values[node]
+                max_idx = 0
+                max_n_samples = 0
+                _, v_ncol = value.shape
+                for v in xrange(v_ncol):
+                    if max_n_samples < value[0,v]:
+                        max_n_samples = value[0,v]
+                        max_idx = v
+                cur_class = class_names[max_idx]
+                str = '{lclass}\t{features}'.format(lclass=cur_class, features=str)
+#                 print str
+                f.write(str)
+                if i<len(idx)-1:
+                    f.write('\n')
+                i = i+1
+                str = ''
+    f.close()
+
+
+# ## 特征提取（分类）
+
+# In[164]:
+
 USER_INFO_CLS = pd.read_sql('''
 SELECT t1.GENDER,
        t1.MEDICAL_GUIDE AS USER_TYPE,
@@ -212,7 +319,7 @@ USER_INFO_CLS.loc[USER_INFO_CLS['CITY'] == u'武汉', 'CITY'] = 'OTHERS'
 
 # 年龄离散化（optional）
 USER_INFO_CLS.AGE = USER_INFO_CLS.AGE.apply(lambda x:'{begin} TO {end}'.format(begin=int(x)/10*10,end=(int(x)/10+1)*10))
-USER_INFO_CLS.loc[USER_INFO_CLS['AGE'] == '-10 -> 0', 'AGE'] = 'UNKNOWN'
+USER_INFO_CLS.loc[USER_INFO_CLS['AGE'] == '-10 TO 0', 'AGE'] = 'UNKNOWN'
 
 # encoding
 USER_INFO_CLS_FEA = USER_INFO_CLS.drop(['CLS_ID'], axis=1)
@@ -237,7 +344,7 @@ import pydot
 # graph = pydot.graph_from_dot_data(dot_data.getvalue()) 
 # graph.write_png(cur_file_dir+"result/USER_INFO_CLS_clf_1.png") 
 
-USER_INFO_CLS_TARGET = ['cls #'+str(int(i)) for i in np.unique(USER_INFO_CLS_TARGET)]
+USER_INFO_CLS_TARGET = ['cls_#'+str(int(i)) for i in np.unique(USER_INFO_CLS_TARGET)]
 print USER_INFO_CLS_TARGET
 from IPython.display import Image  
 dot_data = StringIO()  
@@ -248,9 +355,17 @@ tree.export_graphviz(clf, out_file=dot_data,
                          special_characters=False)  # (default=False) When set to False, ignore special characters for PostScript compatibility.
 graph = pydot.graph_from_dot_data(dot_data.getvalue())  
 graph.write_png(cur_file_dir+"result/user_info_cls_clf.png")
+
+get_lineage(clf, USER_INFO_CLS_FEA_NAMES, USER_INFO_CLS_TARGET) # 年龄离散化（optional）
+# get_lineage(clf, USER_INFO_CLS_FEA_NAMES, USER_INFO_CLS_TARGET, ['AGE'])
+
 # conn.close()
 
-## 特征提取（预测）
+
+# ## 特征提取（预测）
+
+# In[42]:
+
 USER_INFO_CLS = pd.read_sql('''
 SELECT t1.GENDER,
        t1.MEDICAL_GUIDE AS USER_TYPE,
@@ -332,3 +447,177 @@ for k in estimators.keys():
     print("%s Time: %0.2f" % (k, time_spend.total_seconds()))
     
 conn.close()
+
+
+# # ## C4.5样例代码
+
+# # In[ ]:
+
+# from sklearn.datasets import load_iris
+# from sklearn import tree
+# iris = load_iris()
+# clf = tree.DecisionTreeClassifier()
+# print iris.feature_names
+# # clf = clf.fit(iris.data, iris.target)
+# # # from sklearn.externals.six import StringIO  
+# # # import pydot 
+# # # dot_data = StringIO() 
+# # # tree.export_graphviz(clf, out_file=dot_data) 
+# # # graph = pydot.graph_from_dot_data(dot_data.getvalue()) 
+# # # graph.write_pdf("iris.pdf") 
+# # from IPython.display import Image  
+# # dot_data = StringIO()  
+# # tree.export_graphviz(clf, out_file=dot_data,  
+# #                          feature_names=iris.feature_names,  
+# #                          class_names=iris.target_names,  
+# #                          filled=True, rounded=True,  
+# #                          special_characters=True)  
+# # graph = pydot.graph_from_dot_data(dot_data.getvalue())  
+# # graph.write_png("iris.png")
+
+
+# # ## 其他降维算法
+
+# # In[ ]:
+
+# #----------------------------------------------------------------------
+# # Random 2D projection using a random unitary matrix
+# print("Computing random projection")
+# rp = random_projection.SparseRandomProjection(n_components=2, random_state=42)
+# X_projected = rp.fit_transform(X)
+# plt.scatter(X_projected[:, 0], X_projected[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# #----------------------------------------------------------------------
+# # Projection on to the first 2 principal components
+# print("Computing PCA projection")
+# X_pca = decomposition.TruncatedSVD(n_components=2).fit_transform(X)
+# plt.scatter(X_pca[:, 0], X_pca[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# #----------------------------------------------------------------------
+# # Isomap projection of the digits dataset
+# print("Computing Isomap embedding")
+# n_neighbors = 3
+# X_iso = manifold.Isomap(n_neighbors, n_components=2).fit_transform(X)
+# print("Done.")
+# plt.scatter(X_iso[:, 0], X_iso[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# #----------------------------------------------------------------------
+# # Locally linear embedding of the digits dataset
+# print("Computing LLE embedding")
+# n_neighbors = 3
+# clf = manifold.LocallyLinearEmbedding(n_neighbors, n_components=2,
+#                                       method='standard')
+# X_lle = clf.fit_transform(X)
+# print("Done. Reconstruction error: %g" % clf.reconstruction_error_)
+# plt.scatter(X_lle[:, 0], X_lle[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# ## good
+# #----------------------------------------------------------------------
+# # Modified Locally linear embedding of the digits dataset
+# print("Computing modified LLE embedding")
+# n_neighbors = 3
+# clf = manifold.LocallyLinearEmbedding(n_neighbors, n_components=2,
+#                                       method='modified')
+# X_mlle = clf.fit_transform(X)
+# print("Done. Reconstruction error: %g" % clf.reconstruction_error_)
+# plt.scatter(X_mlle[:, 0], X_mlle[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# ## good
+# #----------------------------------------------------------------------
+# # HLLE embedding of the digits dataset
+# print("Computing Hessian LLE embedding")
+# n_neighbors = 6
+# clf = manifold.LocallyLinearEmbedding(n_neighbors, n_components=2,
+#                                       method='hessian')
+# X_hlle = clf.fit_transform(X)
+# print("Done. Reconstruction error: %g" % clf.reconstruction_error_)
+# plt.scatter(X_hlle[:, 0], X_hlle[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# ## good
+# #----------------------------------------------------------------------
+# # LTSA embedding of the digits dataset
+# print("Computing LTSA embedding")
+# n_neighbors = 100
+# clf = manifold.LocallyLinearEmbedding(n_neighbors, n_components=2,
+#                                       method='ltsa')
+# X_ltsa = clf.fit_transform(X)
+# print("Done. Reconstruction error: %g" % clf.reconstruction_error_)
+# plt.scatter(X_ltsa[:, 0], X_ltsa[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# ## good
+# #----------------------------------------------------------------------
+# # MDS  embedding of the digits dataset
+# print("Computing MDS embedding")
+# clf = manifold.MDS(n_components=2, n_init=1, max_iter=100)
+# X_mds = clf.fit_transform(X)
+# print("Done. Stress: %f" % clf.stress_)
+# plt.scatter(X_mds[:, 0], X_mds[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# ## good
+# #----------------------------------------------------------------------
+# # Random Trees embedding of the digits dataset
+# print("Computing Totally Random Trees embedding")
+# hasher = ensemble.RandomTreesEmbedding(n_estimators=200, random_state=0,
+#                                        max_depth=5)
+# X_transformed = hasher.fit_transform(X)
+# pca = decomposition.TruncatedSVD(n_components=2)
+# X_reduced = pca.fit_transform(X_transformed)
+# plt.scatter(X_reduced[:, 0], X_reduced[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# #----------------------------------------------------------------------
+# # Spectral embedding of the digits dataset
+# print("Computing Spectral embedding")
+# embedder = manifold.SpectralEmbedding(n_components=2, random_state=0,
+#                                       eigen_solver="arpack")
+# X_se = embedder.fit_transform(X)
+# plt.scatter(X_se[:, 0], X_se[:, 1])
+# plt.show()
+
+
+# # In[ ]:
+
+# ## best
+# #----------------------------------------------------------------------
+# # t-SNE embedding of the digits dataset
+# print("Computing t-SNE embedding")
+# tsne = manifold.TSNE(n_components=2, init='pca', random_state=0)
+# X_tsne = tsne.fit_transform(X)
+# plt.scatter(X_tsne[:, 0], X_tsne[:, 1])
+# plt.show()
+
