@@ -3,11 +3,12 @@ User Analysis based on operation logs.
 
 执行方法
 ----
-	* run Neo->CaseCluster.java
-	* python CaseCluster.py
-	* run Neo->UserCluster.java
-	* python UserAnalysis.py
-
+```
+>> run Neo->CaseCluster.java
+>> python CaseCluster.py
+>> run Neo->UserCluster.java
+>> python UserAnalysis.py
+```
 中间结果文件说明（result文件夹下）
 ----
 
@@ -28,8 +29,6 @@ UserAnalysis.py|<b>user_cls_cntcase.png|USER_ID、UCID、count(Case)间的关系
 UserAnalysis.py|<b>user_cls_cntcase.xls|USER_ID、UCID、count(Case)间的关系<br>显示：Excel表格
 UserAnalysis.py|<font color=red><b>user_info_cls_rules.txt|<b>将USER的属性和UCID结果，通过sklearn DescionTreeClassifier分类后生成的规则（分类树叶子节点产生的条件）
 UserAnalysis.py|<font color=red><b>user_info_cls_clf.png|<b>将USER的属性和UCID结果，通过sklearn DescionTreeClassifier分类后生成的决策树<br>显示：决策树
-
-* 其中<font color=blue><b>蓝色</font>为重要中间结果，<font color=red><b>红色</font>为最终结果，<font color=green><b>绿色</font>为可参考计算的结果
 
 实验数据
 ---
