@@ -40,8 +40,8 @@ UserAnalysis.py|<font color=red><b>user_info_cls_clf.png|<b>将USER的属性和U
 * 详见Params.xlsx
 
 <h3>测试结果</h3>
-* 120数据集：result-120-lowdim-without_ normalization/
-* 1000数据集：result-1000-lowdim-without_ normalization/
+* 120数据集：result-120-lowdim-without_normalization/
+* 1000数据集：result-1000-lowdim-without_normalization/
 
 Change Log
 ----------
